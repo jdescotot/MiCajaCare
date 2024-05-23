@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "526399056059",
+    "project_id": "cajaahorros-6b50f",
+    "storage_bucket": "cajaahorros-6b50f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:526399056059:android:1dc2cef01e5d70df49a19e",
+        "android_client_info": {
+          "package_name": "com.micajacare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuvcYezuVJBnuFv34Qv0ipl5KCCnlXBHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
