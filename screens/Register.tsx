@@ -45,8 +45,8 @@ const signInWithFacebook = async () => {
 const Register = ({ navigation }: Props) => {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
   const [telefono, setTelefono] = useState('');
   const [identidad, setIdentidad] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -68,47 +68,47 @@ const Register = ({ navigation }: Props) => {
     <View style={styles.container}>
       <Text style={styles.title}>Mi Registro</Text>
       <TextInput
-  style={styles.input}
-  placeholder="Nombre"
-  value={nombre}
-  onChangeText={setNombre}
-/>
-<TextInput
-  style={styles.input}
-  placeholder="Apellido"
-  value={apellido}
-  onChangeText={setApellido}
-/>
-<TextInput
-  placeholder="Email"
-  value={email}
-  onChangeText={setEmail}
-/>
-<TextInput
-  placeholder="Password"
-  secureTextEntry={true}
-  value={password}
-  onChangeText={setPassword}
-/>
-<TextInput
-  style={styles.input}
-  placeholder="Telefono"
-  value={telefono}
-  onChangeText={setTelefono}
-/>
-<TextInput
-  style={styles.input}
-  placeholder="Identidad"
-  value={identidad}
-  onChangeText={setIdentidad}
-/>
-<TextInput
-  style={styles.input}
-  placeholder="Contraseña"
-  secureTextEntry={true}
-  value={contrasena}
-  onChangeText={setContrasena}
-/>
+        style={styles.input}
+        placeholder="Nombre"
+        value={nombre}
+        onChangeText={setNombre}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Apellido"
+        value={apellido}
+        onChangeText={setApellido}
+      />
+      {/* <TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        placeholder="Password"
+        secureTextEntry={true}
+        value={password}
+        onChangeText={setPassword}
+      /> */}
+      <TextInput
+        style={styles.input}
+        placeholder="Telefono"
+        value={telefono}
+        onChangeText={setTelefono}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Identidad"
+        value={identidad}
+        onChangeText={setIdentidad}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        secureTextEntry={true}
+        value={contrasena}
+        onChangeText={setContrasena}
+      />
       <View style={styles.button}>
       <Button
         title="Registrarse"
@@ -131,12 +131,6 @@ const Register = ({ navigation }: Props) => {
       <View style={styles.button}>
         <Button title="Registrarse con Facebook" onPress={signInWithFacebook} />
       </View>
-      </View>
-      <View style={styles.button}>
-        <Button title="Crear Nueva Caja" onPress={() => {}} />
-      </View>
-      <View style={styles.button}>
-        <Button title="Usar Caja Existente" onPress={() => {}} />
       </View>
     </View>
   );

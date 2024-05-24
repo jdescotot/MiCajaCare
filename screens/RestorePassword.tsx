@@ -24,7 +24,7 @@ const handleTakePicture = async () => {
     Alert.alert('¿Está satisfecho con la foto?','',
       [
         {text: 'No', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-       // {text: 'Sí', onPress: () => { setIsCameraVisible(false); setPhotoUri(data.uri); }},
+        //{text: 'Sí', onPress: () => { setIsCameraVisible(false); setPhotoUri(data.uri); }},
       ],
     );
   }
