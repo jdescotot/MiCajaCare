@@ -17,7 +17,7 @@ type Props = {
 const Landing = ({ navigation }: Props) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hola!</Text>
+      <Text style={styles.title}>Bienvenido!</Text>
       <View style={styles.button}>
         <Button
           title="Ya tengo una cuenta"
