@@ -12,38 +12,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: 'grey',
     padding: 16,
-    marginBottom: '50%', // This will cover the superior half of the screen
-},
+    marginBottom: '50%',
+  },
   secondcontainer: {
     flex: 1,
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: 'lightgrey',
   },
-numberText: {
-    fontSize: 48, // This will make the numbers take up a good amount of the screen
-    color: '#f9f9f9',
+  numberText: {
+    fontSize: 48,
+    color: '#000000',
     textAlign: 'center',
     backgroundColor: '#e36f1e',
-},
+  },
   title: {
     fontSize: 44,
     marginBottom: 26,
-    color: '#e36f1e',
+    color: '#000000', // Changed color to black
     textAlign: 'center',
   },
   section: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'grey',
     padding: 5,
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#000000', // Changed color to black
     marginBottom: 10,
+    backgroundColor: '#f9f9f9',
   },
   centeredView:{
     flex: 1,
@@ -69,14 +70,16 @@ numberText: {
   modalText: {
     marginBottom: 15,
     textAlign: 'center',
+    color: '#000000', // Changed color to black
   },
   input:{
     height: 40,
     borderColor: 'white',
-    backgroundColor: 'white',
+    backgroundColor: 'grey',
     borderWidth: 1,
     marginBottom: 16,
     paddingLeft: 8,
+    color: '#000000', // Changed color to black
   },
 });
 

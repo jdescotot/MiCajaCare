@@ -31,7 +31,16 @@ const styles = StyleSheet.create({
     padding: 5,
     marginTop: 56,
     shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0, shadowRadius: 0, elevation: 0,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  olvieContrasenia: {
+    color: '#f9f9f9',
+  },
+  spacer: {
+    height: 50,
   },
 });
 

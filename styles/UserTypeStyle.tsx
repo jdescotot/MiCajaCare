@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 16,
     paddingLeft: 8,
+    color: 'black',
   },
   button: {
     backgroundColor: '#f9f9f9',
@@ -65,6 +66,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  spacer: {
+    height: 50,
+  },
+  bacbutton: {
+    padding: 5,
+    marginTop: 56,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
 });
 
