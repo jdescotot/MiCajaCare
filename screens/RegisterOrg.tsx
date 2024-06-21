@@ -1,17 +1,17 @@
 /* eslint-disable prettier/prettier */
 // RegisterOrg.tsx
-import React, {useState} from 'react';
-import {View, Text, TextInput, Button, Alert} from 'react-native';
-import Slider from '@react-native-community/slider';
+import React, {useState, useEffect} from 'react';
+import {ScrollView, View, Text, TextInput, Button, Alert, KeyboardAvoidingView, Platform} from 'react-native';
 import styles from '../styles/RegisterStyle';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/RootStackParams';
 import firestore from '@react-native-firebase/firestore';
 import { RouteProp } from '@react-navigation/native';
+import { getSavingsBox, updateSavingsBox, createSavingsBox } from '../services/SavingsBoxService';
 
 type Props = {
-    navigation: StackNavigationProp<RootStackParamList, 'RegisterOrg'>;
-    route: RouteProp<RootStackParamList, 'RegisterOrg'>;
+  navigation: StackNavigationProp<RootStackParamList, 'RegisterOrg'>;
+  route: RouteProp<RootStackParamList, 'RegisterOrg'>;
 };
 
 const RegisterOrg = ({ navigation, route }: Props) => {
@@ -21,126 +21,194 @@ const RegisterOrg = ({ navigation, route }: Props) => {
   const [actionPrice, setActionPrice] = useState(0);
   const [loanInterestRate, setLoanInterestRate] = useState(0);
   const [latePaymentInterestRate, setLatePaymentInterestRate] = useState(0);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+
+  console.log('el id y nombre de caja ', setSavingsBoxId, setSavingsBoxName, setStartDate, endDate);
+
+  useEffect(() => {
+    const newEndDate = new Date(startDate);
+    newEndDate.setDate(newEndDate.getDate() + 30);
+    setEndDate(newEndDate);
+  }, [startDate]);
+
+  useEffect(() => {
+    firestore()
+    .collection('userDetails')
+      .doc(userId)
+      .get()
+      .then((doc) => {
+        const user = doc.data();
+        const savingsBoxId = user?.savingsBoxId;
+  
+        if (savingsBoxId) {
+          firestore()
+            .collection('savingsBoxes')
+            .doc(savingsBoxId)
+            .get()
+            .then((doc) => {
+              if (doc.exists) {
+                const savingsBoxData = doc.data();
+                setSavingsBoxName(savingsBoxData?.name);
+              } else {
+                console.log('No savings box found with the given ID');
+              }
+            })
+            .catch((error) => {
+              console.error('Error fetching savings box details:', error);
+            });
+        } else {
+          console.log('No savings box ID found in user details');
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching user details:', error);
+      });
+  }, [userId]); // Dependency array to ensure this effect runs only when userId changes
+
+  useEffect(() => {
+    getSavingsBox(savingsBoxId)
+      .then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          setSavingsBoxName(data?.name);
+          console.log('Caja de ahorros encontrada:', savingsBoxName,data);
+        }
+      });
+  }, []);
+
+  const handleUpdateSavingsBox = () => {
+    return new Promise((resolve, reject) => { // Step 1: Return a new Promise
+      firestore()
+        .collection('userDetails')
+        .doc(userId)
+        .get()
+        .then((doc) => {
+          const user = doc.data();
+          const savingsBoxId = user?.savingsBoxId;
+
+          if (savingsBoxId) {
+            const savingsBoxRef = firestore().collection('savingsBoxes').doc(savingsBoxId);
+            savingsBoxRef.get().then((docSnapshot) => {
+              if (docSnapshot.exists) {
+                savingsBoxRef.update({
+                  actionPrice,
+                  loanInterestRate,
+                  latePaymentInterestRate,
+                  startDate,
+                  endDate,
+                })
+                .then(() => {
+                  console.log('Caja de ahorros actualizada');
+                  resolve();
+                })
+                .catch((error) => {
+                  console.log('Error al actualizar caja de ahorros:', error);
+                  reject(error);
+                });
+              } else {
+                console.log('No se encontro caja de ahorros para este usuario');
+                reject('No savings box found');
+              }
+            });
+          } else {
+            console.log('No se encontro el id de la caja de ahorrros para este usuario');
+            reject('No savings box ID found');
+          }
+        })
+        .catch((error) => {
+          console.log('Error recuperando usuario:', error);
+          reject(error);
+        });
+    });
+  };
 
   const handleInterestRateChange = (setRateFunction: Function, rate: string) => {
+    if (rate === '') {
+      setRateFunction(0);
+      return;
+    }
     const rateValue = parseFloat(rate);
     if (rateValue > 15) {
-        Alert.alert('Interest rate cannot be over 15%');
+      Alert.alert('Tasa de interes no puede superar el 15%');
       return;
     }
     setRateFunction(rateValue);
   };
 
   const handleLatePaymentFeeChange = (fee: string) => {
+    if (fee === '') {
+      setLatePaymentInterestRate(0);
+      return;
+    }
     const feeValue = parseFloat(fee);
     if (feeValue > 3) {
-        Alert.alert('Late payment fee cannot be over 3%');
+      Alert.alert('Tasa de pago tardio no puede ser mas de 3%');
       return;
     }
     setLatePaymentInterestRate(feeValue);
   };
 
+  useEffect(() => {
+    const newEndDate = new Date(startDate);
+    newEndDate.setDate(newEndDate.getDate() + 30);
+    setEndDate(newEndDate);
+  }, [startDate]);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Nueva  caja de Ahorros</Text>
-      <Text style={styles.sliderText}>Precio de Acción</Text>
-      <Slider
-        style={styles.slider}
-        minimumValue={0}
-        maximumValue={500}
-        step={1}
-        value={actionPrice}
-        onValueChange={setActionPrice}
-        minimumTrackTintColor="#FFFFFF"
-        maximumTrackTintColor="#000000"
-      />
-      <TextInput
-        style={styles.input}
-        value={actionPrice.toString()}
-        onChangeText={(value) => setActionPrice(parseFloat(value))}
-      />
-      <Text style={styles.sliderText}>Tasa de interes prestamo</Text>
-      <Slider
-        style={styles.slider}
-        minimumValue={0}
-        maximumValue={15}
-        step={0.5}
-        value={loanInterestRate}
-        onValueChange={setLoanInterestRate}
-        minimumTrackTintColor="#FFFFFF"
-        maximumTrackTintColor="#000000"
-      />
-      <TextInput
-        style={styles.input}
-        // placeholder="Tasa de interes prestamo"
-        // placeholderTextColor="#A69E9E"
-        value={loanInterestRate.toString()}
-        onChangeText={(value) => handleInterestRateChange(setLoanInterestRate, value)}
-      />
-      <Text style={styles.sliderText}>Tasa de interes por pago tardio</Text>
-      <Slider
-        style={styles.slider}
-        minimumValue={0}
-        maximumValue={3} // Set your maximum value here
-        step={0.5} // Set your step value here
-        value={latePaymentInterestRate}
-        onValueChange={setLatePaymentInterestRate}
-        minimumTrackTintColor="#FFFFFF"
-        maximumTrackTintColor="#000000"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Tasa de interes por pago tardio"
-        placeholderTextColor="#A69E9E"
-        value={latePaymentInterestRate.toString()}
-        onChangeText={(value) => handleLatePaymentFeeChange(value)}
-      />
-      <View style={styles.spacer} />
-      <Button
-        title="Crear caja de ahorros"
-        onPress={() => {
-          if (savingsBoxId) {
-            // Associate the user with the existing savingsBox
-            firestore()
-              .collection('savingsBoxes')
-              .doc(savingsBoxId)
-              .update({
-                members: firestore.FieldValue.arrayUnion(userId),
-                sharePrice: actionPrice,
-                loanInterestRate: loanInterestRate,
-                latePaymentInterestRate: latePaymentInterestRate,
-              })
-              .then(() => console.log('User added to the existing savings box'))
-              .catch((error) => console.log('Error adding user to the existing savings box:', error));
-          } else {
-            // Create a new savingsBox and set the user as the administrator
-            firestore()
-              .collection('savingsBoxes')
-              .add({
-                name: savingsBoxName,
-                administrator: userId,
-                members: [userId],
-                actionPrice,
-                loanInterestRate,
-                latePaymentInterestRate,
-                // other savings box properties...
-                // add initial values for the savings box
-                sharesBoughtThisWeek: 0,
-                amountTaken: 0.00,
-                amountOwed: 0.00,
-                pendingPayments: 0.00,
-                nextPaymentDate: null, // or set a default date if needed
-                totalInvestment: 0.00,
-                totalPoolInvestment: 0.00,
-                pendingRequests: 0,
-              })
-              .then(() => console.log('New savings box created'))
-              .catch((error) => console.log('Error creating new savings box:', error));
-          }
-          navigation.navigate('Dashboard');
-        }}
-      />
-    </View>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }} >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <Text style={styles.title}>Nueva  caja de Ahorros</Text>
+        <View style={styles.registerContainer}>
+          <Text style={styles.sliderText}>Precio de Acción</Text>
+          <TextInput
+            style={styles.input}
+            value={actionPrice.toString()}
+            onChangeText={(value) => setActionPrice(value === '' ? 0 : parseFloat(value))}
+            keyboardType="numeric"
+          />
+          <Text style={styles.sliderText}>Tasa de interes prestamo</Text>
+          <TextInput
+            style={styles.input}
+            value={loanInterestRate.toString()}
+            onChangeText={(value) => handleInterestRateChange(setLoanInterestRate, value === '' ? 0 : value)}
+            keyboardType="numeric"
+          />
+
+          <Text style={styles.sliderText}>Tasa de interes por pago tardio</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Tasa de interes por pago tardio"
+            placeholderTextColor="#A69E9E"
+            value={latePaymentInterestRate.toString()}
+            onChangeText={(value) => handleLatePaymentFeeChange(value === '' ? 0 : value)}
+            keyboardType="numeric"
+          />
+          <View style={styles.spacer} />
+          <Button
+            title="Crear caja de ahorros"
+            disabled={!(actionPrice && loanInterestRate && latePaymentInterestRate)}
+            onPress={() => {
+              handleUpdateSavingsBox()
+                .then(() => {
+                  navigation.navigate('Dashboard');
+                })
+                .catch((error) => {
+                  console.error('Failed to update savings box:', error);
+                    Alert.alert(
+                      "Error",
+                      "No se pudo actualizar la caja de ahorros. Por favor, inténtelo de nuevo.", // Message to display
+                      [
+                        { text: "OK" },
+                      ]
+                    );
+                });
+            }}
+          />
+          <View style={{marginBottom: 50}}/>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

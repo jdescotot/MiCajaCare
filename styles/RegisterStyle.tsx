@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
 // RegisterStyles.js
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
+const windowWidth = Dimensions.get('window').width;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -10,19 +11,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#e36f1e',
   },
   title: {
-    fontSize: 74,
-    marginBottom: 126,
+    fontSize: 64,
+    marginBottom: 26,
     color: '#f9f9f9',
     textAlign: 'center',
   },
+  inputTitle: {
+    color: '#000',
+    marginBottom: 2,
+    marginTop: 5,
+  },
   input: {
     height: 40,
-    borderColor: 'grey',
-    backgroundColor: 'white',
+    borderColor: 'lightgrey',
+    backgroundColor: 'lightgrey',
     borderWidth: 1,
-    marginBottom: 16,
     paddingLeft: 8,
-    color: '#000',
+    marginBottom: 28,
+    borderRadius: 20,
   },
   button: {
     backgroundColor: '#f9f9f9',
@@ -47,11 +53,34 @@ const styles = StyleSheet.create({
     height: 50,
   },
   slider: {
-    width: 200,
-    height: 30,
+    width: windowWidth - 50,
+    height: 70,
   },
   sliderText: {
     fontSize: 20,
+  },
+  registerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 40,
+    padding: 16,
+  },
+  circle: {
+    position: 'absolute',
+    width: 400,
+    height: 400,
+    borderRadius: 500,
+    backgroundColor: '#FADADD',
+    right: 150,
+    top: 225,
+  },
+  circleTwo: {
+    position: 'absolute',
+    width: 450,
+    height: 450,
+    borderRadius: 600,
+    backgroundColor: '#AEC6CF',
+    right: -80,
+    top: 475,
   },
 });
 

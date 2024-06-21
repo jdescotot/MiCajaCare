@@ -1,5 +1,6 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import React, {useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer, createNavigationContainerRef }  from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import Landing from './screens/Landing';
 import Login from './screens/Login';
@@ -7,13 +8,29 @@ import Register from './screens/Register';
 import RegisterOrg from './screens/RegisterOrg';
 import RestorePassword from './screens/RestorePassword';
 import Dashboard from './screens/navigation/Dashboard';
+import LoansPanel from './screens/admin/LoansPanel';
+import Stockpanel from './screens/admin/StockPanel';
 import firebase from './firebaseConfig';
 const Stack = createStackNavigator();
+const navigationRef = createNavigationContainerRef();
 
 const App = () => {
   console.log(firebase);
+  useEffect(() => {
+    const checkLogin = async () => {
+      const userEmail = await AsyncStorage.getItem('userEmail');
+      if (userEmail && navigationRef.isReady()) {
+        navigationRef.navigate('Dashboard');
+      }else{
+        navigationRef.current?.navigate('Landing');
+      }
+    };
+
+    checkLogin();
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator initialRouteName="Landing">
         <Stack.Screen
           name="Landing"
@@ -29,6 +46,8 @@ const App = () => {
         />
         <Stack.Screen name="RestorePassword" component={RestorePassword} />
         <Stack.Screen name="Dashboard" component={Dashboard} />
+        <Stack.Screen name="LoansPanel" component={LoansPanel} />
+        <Stack.Screen name="StockPanel" component={Stockpanel} />
       </Stack.Navigator>
     </NavigationContainer>
   );

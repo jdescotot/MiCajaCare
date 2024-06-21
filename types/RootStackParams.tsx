@@ -6,4 +6,8 @@ export type RootStackParamList = {
     RegisterOrg: { userId: string };
     RestorePassword: undefined;
     Dashboard: undefined;
+    LoanPanel: undefined;
+    stockPanel: undefined;
+    PetitionService: undefined;
+    LoanService: undefined;
 };

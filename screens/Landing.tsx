@@ -17,18 +17,22 @@ type Props = {
 const Landing = ({ navigation }: Props) => {
   return (
     <View style={styles.container}>
+            <View style={styles.circleTwo}/>
+            <View style={styles.circle}/>
       <Text style={styles.title}>Bienvenido!</Text>
-      <View style={styles.button}>
-        <Button
-          title="Ya tengo una cuenta"
-          onPress={() => navigation.navigate('Login')}
-        />
-      </View>
-      <View style={styles.button}>
-        <Button
-          title="Aun no tengo una cuenta"
-          onPress={() => navigation.navigate('Register')}
-        />
+      <View style={styles.secondContainer}>
+        <View style={styles.button}>
+          <Button
+            title="Ya tengo una cuenta"
+            onPress={() => navigation.navigate('Login')}
+          />
+        </View>
+        <View style={styles.button}>
+          <Button
+            title="Aun no tengo una cuenta"
+            onPress={() => navigation.navigate('Register')}
+          />
+        </View>
       </View>
     </View>
   );

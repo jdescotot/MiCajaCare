@@ -9,23 +9,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#e36f1e',
   },
   title: {
-    fontSize: 74,
+    fontSize: 64,
     marginBottom: 126,
     color: '#f9f9f9',
     textAlign: 'center',
   },
   input: {
     height: 40,
-    borderColor: 'white',
-    backgroundColor: 'white',
+    borderColor: 'lightgrey',
+    backgroundColor: 'lightgrey',
     borderWidth: 1,
-    marginBottom: 16,
     paddingLeft: 8,
+    borderRadius: 20,
   },
   button: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#e36f1e',
     padding: 5,
-    marginBottom: 16,
+    marginBottom: 26,
+    marginTop: 26,
+    borderRadius: 20,
   },
   bacbutton: {
     padding: 5,
@@ -39,8 +41,42 @@ const styles = StyleSheet.create({
   olvieContrasenia: {
     color: '#f9f9f9',
   },
+  inputTitle: {
+    color: '#000',
+    marginBottom: 4,
+    marginTop: 19,
+  },
   spacer: {
-    height: 50,
+    height: 75,
+  },
+  loginContainer: {
+    backgroundColor: 'white',
+    borderRadius: 40,
+    padding: 16,
+  },
+  forgotPassword: {
+    color: 'blue',
+    marginBottom: 16,
+    marginTop: 38,
+    textAlign: 'center',
+  },
+  circle: {
+    position: 'absolute',
+    width: 400,
+    height: 400,
+    borderRadius: 500,
+    backgroundColor: '#FADADD',
+    right: 150,
+    top: 225,
+  },
+  circleTwo: {
+    position: 'absolute',
+    width: 450,
+    height: 450,
+    borderRadius: 600,
+    backgroundColor: '#AEC6CF',
+    right: -80,
+    top: 475,
   },
 });
 
