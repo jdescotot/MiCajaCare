@@ -11,6 +11,8 @@ import Dashboard from './screens/navigation/Dashboard';
 import LoansPanel from './screens/admin/LoansPanel';
 import Stockpanel from './screens/admin/StockPanel';
 import firebase from './firebaseConfig';
+import AddMoneyToSavingsBox from './screens/admin/AddMoneyToSavingsBox';
+
 const Stack = createStackNavigator();
 const navigationRef = createNavigationContainerRef();
 
