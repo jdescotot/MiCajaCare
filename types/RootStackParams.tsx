@@ -10,4 +10,5 @@ export type RootStackParamList = {
     stockPanel: undefined;
     PetitionService: undefined;
     LoanService: undefined;
+    AddMoneyToSavingsBox: undefined;
 };

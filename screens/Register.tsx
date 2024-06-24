@@ -182,6 +182,8 @@ const Register = ({ navigation }: Props) => {
                       sharesBoughtThisWeek: 0,
                       totalInvestment: 0,
                       savingsBoxId: savingsBoxName,
+                      isAdmin: true,
+                      isActive: true,
                     })
                     .then(() => {
                       navigation.navigate('RegisterOrg', { userId });

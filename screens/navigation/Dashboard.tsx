@@ -17,6 +17,7 @@ const Dashboard = () => {
     const screenWidth = Dimensions.get('window').width;
     const fontSize = screenWidth * 0.06;
     const [refreshing, setRefreshing] = useState(false);
+    const [liquidesDeCaja, setLiquidesDeCaja] = useState(0);
 
     const fetchData = async () => {
         try {
@@ -43,12 +44,16 @@ const Dashboard = () => {
 
                 const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
                 const userDetails = userDetailsDoc.data();
+                const totalInvestmentToAdd = savingsBoxData.totalInvestmentToAdd || 0;
+                setLiquidesDeCaja(totalInvestmentToAdd);
+                console.log('liquides de caja', liquidesDeCaja);
 
                 if (!userDetails) {
                     throw new Error('Detalles de usuario no validos o faltantes');
                 }
 
                 setData({
+                    liquidesDeCaja: totalInvestmentToAdd,
                     actionPrice: savingsBoxData.actionPrice || 0,
                     loanInterestRate: savingsBoxData.loanInterestRate || 0,
                     latePaymentInterestRate: savingsBoxData.latePaymentInterestRate || 0,
@@ -148,14 +153,14 @@ const Dashboard = () => {
             // Retrieve the loan request details
             const loanRequestDoc = await firestore().collection('loanRequests').doc(id).get();
             const loanRequestData = loanRequestDoc.data();
-            if (!loanRequestData) throw new Error('Loan request data not found');
+            if (!loanRequestData) throw new Error('LDatos no encontrados');
 
             const { userId, loanAmount, loanDuration } = loanRequestData;
 
             // Fetch the current user details
             const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
             const userDetails = userDetailsDoc.data();
-            if (!userDetails) throw new Error('User details not found');
+            if (!userDetails) throw new Error('No se encontro informacion de usuario');
 
             const currentAmountTaken = userDetails.amountTaken || 0;
             const currentAmountOwed = userDetails.amountOwed || 0;
@@ -201,6 +206,7 @@ const Dashboard = () => {
         {
             title: 'Vista General',
             data: [
+                { title: 'Liquides de Caja', value: data.liquidesDeCaja },
                 { title: 'Precio de la acción', value: data.actionPrice },
                 { title: 'Cantidad adeudada', value: data.amountOwed },
                 { title: 'Cantidad tomada', value: data.amountTaken },
@@ -275,19 +281,32 @@ const Dashboard = () => {
         });
     }
 
-    sections.push({
-        title: 'Acciones a realizar',
-        data: ['Solicitar préstamo', 'Comprar acciones'],
-        renderItem: ({ item }) => (
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate(item === 'Solicitar préstamo' ? 'LoansPanel' : 'StockPanel')}
-            >
-                <Text style={styles.buttonText}>{item}</Text>
-            </TouchableOpacity>
-        ),
-        keyExtractor: (item) => item,
-    });
+const actionsData = ['Solicitar préstamo', 'Comprar acciones'];
+if (isAdmin) {
+    actionsData.push('Eventos'); // Only add "Eventos" if the user is an admin
+}
+
+sections.push({
+    title: 'Acciones a realizar',
+    data: actionsData,
+    renderItem: ({ item }) => (
+        <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+                if (item === 'Solicitar préstamo') {
+                    navigation.navigate('LoansPanel');
+                } else if (item === 'Comprar acciones') {
+                    navigation.navigate('StockPanel');
+                } else if (item === 'Eventos' && isAdmin) {
+                    navigation.navigate('AddMoneyToSavingsBox');
+                }
+            }}
+        >
+            <Text style={styles.buttonText}>{item}</Text>
+        </TouchableOpacity>
+    ),
+    keyExtractor: (item) => item,
+});
 
     useEffect(() => {
         fetchData();

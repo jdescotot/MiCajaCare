@@ -1,16 +1,51 @@
 /* eslint-disable prettier/prettier */
 // screens/AddMoneyToSavingsBox.tsx
-import React, { useState } from 'react';
+// Updated AddMoneyToSavingsBox.tsx to use the savings box ID retrieval method similar to LoansPanel.tsx
+
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Alert, Text } from 'react-native';
-import { getSavingsBox, updateSavingsBox } from '../../services/SavingsBoxService';
-import styles from '../../styles/PanelStyle'; // Assuming you want to reuse the styles from RegisterOrg
+import { updateSavingsBox } from '../../services/SavingsBoxService';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import styles from '../../styles/PanelStyle';
 
 const AddMoneyToSavingsBox = () => {
   const [savingsBoxId, setSavingsBoxId] = useState('');
   const [amountToAdd, setAmountToAdd] = useState('');
 
+  const getCurrentUserSavingsBoxId = async () => {
+    const user = auth().currentUser;
+    if (!user) {
+      throw new Error('No se ha conectado a su cuenta no puede hacer peticiones');
+    }
+
+    const userId = user.uid;
+    const userDoc = await firestore().collection('userDetails').doc(userId).get();
+    const userData = userDoc.data();
+
+    if (!userData || !userData.savingsBoxId) {
+      throw new Error('Documento de usuario o caja de ahorro no valido o faltante');
+    }
+
+    return userData.savingsBoxId;
+  };
+
+  useEffect(() => {
+    const fetchSavingsBoxId = async () => {
+      try {
+        const id = await getCurrentUserSavingsBoxId();
+        setSavingsBoxId(id);
+      } catch (error) {
+        console.error(error);
+        Alert.alert('Error', 'Failed to retrieve savings box ID.');
+      }
+    };
+
+    fetchSavingsBoxId();
+  }, []);
+
   const handleAddMoney = async () => {
-    if (!savingsBoxId || !amountToAdd) {
+    if (!amountToAdd) {
       Alert.alert('Error', 'Please fill all fields.');
       return;
     }
@@ -22,7 +57,7 @@ const AddMoneyToSavingsBox = () => {
     }
 
     try {
-      const savingsBoxDoc = await getSavingsBox(savingsBoxId);
+      const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
       const savingsBoxData = savingsBoxDoc.data();
 
       if (!savingsBoxData) {
@@ -32,22 +67,16 @@ const AddMoneyToSavingsBox = () => {
 
       const updatedTotalInvestmentToAdd = (savingsBoxData.totalInvestmentToAdd || 0) + amount;
       await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd });
-      Alert.alert('Success', 'Amount added successfully.');
+      Alert.alert('Exito', 'El Dinero se agrego exitosamente.');
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'An error occurred while adding money.');
+      Alert.alert('Error', 'Un error ocurrio al agregar el dinero.');
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add Money to Savings Box</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Savings Box ID"
-        value={savingsBoxId}
-        onChangeText={setSavingsBoxId}
-      />
       <TextInput
         style={styles.input}
         placeholder="Amount to Add"

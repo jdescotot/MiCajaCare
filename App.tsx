@@ -50,7 +50,7 @@ const App = () => {
         <Stack.Screen name="Dashboard" component={Dashboard} />
         <Stack.Screen name="LoansPanel" component={LoansPanel} />
         <Stack.Screen name="StockPanel" component={Stockpanel} />
-        <Stack.Screen name="AddMoneyToSavingsBox" component={AddMoneyToSavingsBox} />//Holis
+        <Stack.Screen name="AddMoneyToSavingsBox" component={AddMoneyToSavingsBox} />
       </Stack.Navigator>
     </NavigationContainer>
   );
