@@ -240,6 +240,8 @@ const Register = ({ navigation }: Props) => {
                           sharesBoughtThisWeek: 0,
                           totalInvestment: 0,
                           savingsBoxId: savingsBoxId,
+                          isAdmin: false,
+                          isActive: false,
                         })
                         .then(() => {
                           navigation.navigate('Dashboard');

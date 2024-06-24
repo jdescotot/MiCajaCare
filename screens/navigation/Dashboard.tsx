@@ -85,14 +85,22 @@ const Dashboard = () => {
 
             const savingsBoxId = userDetails.savingsBoxId;
 
-            const userRequestsSnapshot = await firestore().collection('loanRequests')
+            const loanRequestsPromise = firestore().collection('loanRequests')
+                .where('userId', '==', userId)
+                .where('savingsBoxId', '==', savingsBoxId)
+                .get();
+            const stockRequestsPromise = firestore().collection('stockRequests')
                 .where('userId', '==', userId)
                 .where('savingsBoxId', '==', savingsBoxId)
                 .get();
 
-            const userRequests = userRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setPastRequests(userRequests);  // Actualiza el estado de pastRequests con los datos obtenidos
-            console.log('Solicitudes pasadas:', userRequests);
+            const [loanRequestsSnapshot, stockRequestsSnapshot] = await Promise.all([loanRequestsPromise, stockRequestsPromise]);
+
+            const loanRequests = loanRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const stockRequests = stockRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const combinedRequests = [...loanRequests, ...stockRequests];
+
+            setPastRequests(combinedRequests);
         } catch (error) {
             console.error(error);
         }
@@ -109,8 +117,14 @@ const Dashboard = () => {
 
             const savingsBoxId = userDetails.savingsBoxId;
 
-            const loanRequestsPromise = firestore().collection('loanRequests').where('savingsBoxId', '==', savingsBoxId).where('status', '==', 'Pendiente').get();
-            const requestsPromise = firestore().collection('requests').where('savingsBoxId', '==', savingsBoxId).where('status', '==', 'Pendiente').get();
+            const loanRequestsPromise = firestore().collection('loanRequests')
+                .where('savingsBoxId', '==', savingsBoxId)
+                .where('status', '==', 'Pendiente')
+                .get();
+            const requestsPromise = firestore().collection('stockRequests')
+                .where('savingsBoxId', '==', savingsBoxId)
+                .where('status', '==', 'Pendiente')
+                .get();
 
             const [loanRequestsSnapshot, requestsSnapshot] = await Promise.all([loanRequestsPromise, requestsPromise]);
 
@@ -118,9 +132,8 @@ const Dashboard = () => {
             const requests = requestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             const allRequests = [...loanRequests, ...requests];
-
             setPendingRequests(allRequests);
-            fetchAndDisplayUserRequests(); // Llama a esta función para asegurar que las solicitudes pasadas se obtengan después de las pendientes
+            fetchAndDisplayUserRequests();
         } catch (error) {
             console.error(error);
         }
@@ -150,45 +163,75 @@ const Dashboard = () => {
     const handleAccept = async (id) => {
         console.log("Procesando aceptación", id);
         try {
-            // Retrieve the loan request details
-            const loanRequestDoc = await firestore().collection('loanRequests').doc(id).get();
-            const loanRequestData = loanRequestDoc.data();
-            if (!loanRequestData) throw new Error('LDatos no encontrados');
 
-            const { userId, loanAmount, loanDuration } = loanRequestData;
+            const requestDoc = await firestore().collection('loanRequests').doc(id).get();
+            let requestData = requestDoc.data();
 
-            // Fetch the current user details
-            const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
-            const userDetails = userDetailsDoc.data();
-            if (!userDetails) throw new Error('No se encontro informacion de usuario');
 
-            const currentAmountTaken = userDetails.amountTaken || 0;
-            const currentAmountOwed = userDetails.amountOwed || 0;
+            if (requestData && requestData.loanAmount !== undefined) {
 
-            // Calculate the new amountTaken and amountOwed
-            const newAmountTaken = currentAmountTaken + loanAmount;
-            const newAmountOwed = currentAmountOwed + loanAmount;
+                const { userId, loanAmount, loanDuration } = requestData;
+                const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
+                const userDetails = userDetailsDoc.data();
+                if (!userDetails) throw new Error('No se encontró información de usuario');
 
-            // Calculate the next payment and update pendingPayments
-            const nextPayment = loanAmount / loanDuration;
-            const pendingPayments = loanDuration;
+                const currentAmountTaken = userDetails.amountTaken || 0;
+                const currentAmountOwed = userDetails.amountOwed || 0;
+                const newAmountTaken = currentAmountTaken + loanAmount;
+                const newAmountOwed = currentAmountOwed + loanAmount;
+                const nextPayment = loanAmount / loanDuration;
+                const pendingPayments = loanDuration;
 
-            // Update the user's details in the database
-            await firestore().collection('userDetails').doc(userId).update({
-                amountTaken: newAmountTaken,
-                amountOwed: newAmountOwed,
-                pendingPayments: pendingPayments,
-            });
+                await firestore().collection('userDetails').doc(userId).update({
+                    amountTaken: newAmountTaken,
+                    amountOwed: newAmountOwed,
+                    pendingPayments: pendingPayments,
+                });
 
-            // Update the loan request status to 'Accepted'
-            await firestore().collection('loanRequests').doc(id).update({
-                status: 'Aceptado',
-            });
+                await firestore().collection('loanRequests').doc(id).update({
+                    status: 'Aceptado',
+                });
+            }  else {
+                // Process stock request acceptance
+                const stockRequestDoc = await firestore().collection('stockRequests').doc(id).get();
+                let stockRequestData = stockRequestDoc.data();
+                if (!stockRequestData) throw new Error('No se encontró la solicitud de compra de acciones');
+
+                const { userId, numShares } = stockRequestData; // Corrected from numberOfStocks to numShares
+                const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
+                const userDetails = userDetailsDoc.data();
+                if (!userDetails || !userDetails.savingsBoxId) throw new Error('Detalles de usuario o ID de caja de ahorros faltantes');
+
+                const savingsBoxId = userDetails.savingsBoxId;
+                const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
+                const savingsBoxData = savingsBoxDoc.data();
+                if (!savingsBoxData) throw new Error('Datos de la caja de ahorros no encontrados');
+                const actionPrice = savingsBoxData.actionPrice;
+                const actionPriceNumber = parseFloat(actionPrice);
+                const numSharesNumber = parseInt(numShares, 10);
+                const liquidesDeCajaNumber = parseFloat(liquidesDeCaja);
+
+                console.log(`actionPrice: ${actionPriceNumber}, numShares: ${numSharesNumber}, liquidesDeCaja: ${liquidesDeCajaNumber}`);
+
+                if (isNaN(actionPriceNumber) || isNaN(numSharesNumber) || isNaN(liquidesDeCajaNumber)) {
+                  console.error('One of the values is not a number');
+                } else {
+                  const totalAmountToAdd = numSharesNumber * actionPriceNumber;
+                  console.log('Updating user details', totalAmountToAdd);
+                  const newLiquidesDeCaja = liquidesDeCajaNumber + totalAmountToAdd;
+                  await firestore().collection('savingsBoxes').doc(savingsBoxId).update({
+                    totalInvestmentToAdd: newLiquidesDeCaja,
+                  });
+                }
+                await firestore().collection('stockRequests').doc(id).update({
+                    status: 'Aceptado',
+                });
+            }
 
             Alert.alert("Solicitud aceptada con éxito");
             await fetchPendingRequests();
         } catch (error) {
-            console.error("Error processing acceptance:", error);
+            console.error("Error aceptando solicitud:", error);
             Alert.alert("Error al procesar la solicitud");
         }
     };
@@ -237,8 +280,6 @@ const Dashboard = () => {
 
                 return (
                     <View style={styles.requestContainer} key={index}>
-                        <Text>{`Solicitud ${index + 1}: ${item.name}`}</Text>
-                        <Text>{`Tipo: ${item.type}`}</Text>
                         {item.loanAmount && <Text>{`Monto del préstamo: ${item.loanAmount}`}</Text>}
                         {item.loanDetail && <Text>{`Detalle del préstamo: ${item.loanDetail}`}</Text>}
                         {item.loanDuration && <Text>{`Duración del préstamo: ${item.loanDuration} meses`}</Text>}
@@ -253,10 +294,10 @@ const Dashboard = () => {
                         <View style={styles.buttonContainer}>
                             <Button title="Aceptar" onPress={() => handleAccept(item.id)} style={styles.requestButton} />
                             <Button 
-                                title="Rechazar" 
-                                onPress={() => handleReject(item.id)} 
+                                title="Rechazar"
+                                onPress={() => handleReject(item.id)}
                                 style={styles.requestButton} 
-                                disabled={!rejectionText.trim()} // Button is disabled unless there's text
+                                disabled={!rejectionText.trim()}
                             />
                         </View>
                     </View>
@@ -266,7 +307,7 @@ const Dashboard = () => {
         });
     }
 
-    if (pastRequests.length > 0) { // Only add this section if there are past requests
+    if (pastRequests.length > 0) {
         sections.push({
             title: 'Solicitudes Pasadas',
             data: pastRequests,
@@ -283,7 +324,7 @@ const Dashboard = () => {
 
 const actionsData = ['Solicitar préstamo', 'Comprar acciones'];
 if (isAdmin) {
-    actionsData.push('Eventos'); // Only add "Eventos" if the user is an admin
+    actionsData.push('Eventos');
 }
 
 sections.push({
@@ -353,11 +394,6 @@ sections.push({
                         />
                     }
                 />
-            </View>
-            <View>
-                <TouchableOpacity onPress={handleLogout}>
-                    <Text style={styles.logout}>Cerrar sesión</Text>
-                </TouchableOpacity>
             </View>
         </View>
     );

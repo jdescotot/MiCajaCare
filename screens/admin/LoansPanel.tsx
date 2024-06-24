@@ -59,6 +59,14 @@ const LoansPanel = () => {
         setConfirmModalVisible(false);
     };
 
+    const getSavingsBoxDetails = async (savingsBoxId: string) => {
+        const doc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
+        if (!doc.exists) {
+          throw new Error('Savings box not found');
+        }
+        return doc.data();
+      };
+
     const getInterestRate = async (savingsBoxId) => {
         const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
         const savingsBoxData = savingsBoxDoc.data();

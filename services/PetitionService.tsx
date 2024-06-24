@@ -14,7 +14,7 @@ export const sendPetition = async (
     const user = auth().currentUser;
     if (user) {
       const userId = user.uid;
-      await firestore().collection('loanRequests').add({
+      await firestore().collection('stockRequests').add({
         userId,
         numShares,
         status: 'Pendiente',
