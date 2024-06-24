@@ -206,26 +206,27 @@ const Dashboard = () => {
                 const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
                 const savingsBoxData = savingsBoxDoc.data();
                 if (!savingsBoxData) throw new Error('Datos de la caja de ahorros no encontrados');
+                const currentTotalInvestmentToAdd = savingsBoxData.totalInvestmentToAdd || 0;
                 const actionPrice = savingsBoxData.actionPrice;
                 const actionPriceNumber = parseFloat(actionPrice);
                 const numSharesNumber = parseInt(numShares, 10);
                 const liquidesDeCajaNumber = parseFloat(liquidesDeCaja);
 
-                console.log(`actionPrice: ${actionPriceNumber}, numShares: ${numSharesNumber}, liquidesDeCaja: ${liquidesDeCajaNumber}`);
+                console.log(`actionPrice: ${actionPriceNumber}, numShares: ${numSharesNumber}, liquidesDeCaja: ${currentTotalInvestmentToAdd}`);
 
-                if (isNaN(actionPriceNumber) || isNaN(numSharesNumber) || isNaN(liquidesDeCajaNumber)) {
-                  console.error('One of the values is not a number');
-                } else {
-                  const totalAmountToAdd = numSharesNumber * actionPriceNumber;
-                  console.log('Updating user details', totalAmountToAdd);
-                  const newLiquidesDeCaja = liquidesDeCajaNumber + totalAmountToAdd;
-                  await firestore().collection('savingsBoxes').doc(savingsBoxId).update({
-                    totalInvestmentToAdd: newLiquidesDeCaja,
+                if (isNaN(actionPriceNumber) || isNaN(numSharesNumber)) {
+                    console.error('One of the values is not a number');
+                  } else {
+                    const totalAmountToAdd = numSharesNumber * actionPriceNumber;
+                    console.log('Updating user details', totalAmountToAdd);
+                    const newTotalInvestmentToAdd = currentTotalInvestmentToAdd + totalAmountToAdd;
+                    await firestore().collection('savingsBoxes').doc(savingsBoxId).update({
+                      totalInvestmentToAdd: newTotalInvestmentToAdd,
+                    });
+                  }
+                  await firestore().collection('stockRequests').doc(id).update({
+                      status: 'Aceptado',
                   });
-                }
-                await firestore().collection('stockRequests').doc(id).update({
-                    status: 'Aceptado',
-                });
             }
 
             Alert.alert("Solicitud aceptada con éxito");

@@ -41,22 +41,22 @@ const LoansPanel = () => {
     const navigation = useNavigation();
 
     const confirmLoanRequest = async () => {
-        const savingsBoxId = await getCurrentUserSavingsBoxId();
-        const user = auth().currentUser;
-        if (!user) {
-            Alert.alert("Usuario no identificado, por favor inicie sesión");
-            return;
-        }
-        const interestRate = await getInterestRate(savingsBoxId);
-        setInterestRate(interestRate);
-        requestLoan(loanAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail)
-            .then(() => {
-                Alert.alert("Solicitud enviada con exito");
-            })
-            .catch(() => {
+        try {
+            const savingsBoxId = await getCurrentUserSavingsBoxId();
+            const interestRate = await getInterestRate(savingsBoxId);
+            setInterestRate(interestRate);
+            await requestLoan(loanAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail);
+            Alert.alert("Solicitud enviada con éxito");
+            setConfirmModalVisible(false);
+        } catch (error) {
+            if (error.message === 'No se ha conectado a su cuenta no puede hacer peticiones' || error.message === 'Documento de usuario o caja de ahorro no valido o faltante') {
+                Alert.alert("Usuario no identificado, por favor inicie sesión");
+            } else if (error.message === 'Savings box not found' || error.message === 'Documento de caja de ahorro no valido o tasa de interés faltante') {
+                Alert.alert("Error al obtener detalles de la caja de ahorros");
+            } else {
                 Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
-            });
-        setConfirmModalVisible(false);
+            }
+        }
     };
 
     const getSavingsBoxDetails = async (savingsBoxId: string) => {
