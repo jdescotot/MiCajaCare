@@ -165,6 +165,8 @@ const Register = ({ navigation }: Props) => {
                       sharesBoughtThisWeek: 0,
                       totalInvestment: 0,
                       savingsBoxId: savingsBoxName,
+                      isAdmin: true,
+                      isActive: true,
                     })
                     .catch((error) => {
                       console.log('Error creating user details:', error);
@@ -219,6 +221,8 @@ const Register = ({ navigation }: Props) => {
                           sharesBoughtThisWeek: 0,
                           totalInvestment: 0,
                           savingsBoxId: savingsBoxId,
+                          isAdmin: false,
+                          isActive: false,
                         })
                         .catch((error) => {
                           console.log('Error creating user details:', error);
@@ -233,7 +237,7 @@ const Register = ({ navigation }: Props) => {
                           pendingPayments: 0,
                           sharesBoughtThisWeek: 0,
                           totalInvestment: 0,
-                          savingsBoxId: savingsBoxName,
+                          savingsBoxId: savingsBoxId,
                         })
                         .then(() => {
                           navigation.navigate('Dashboard');
@@ -255,7 +259,6 @@ const Register = ({ navigation }: Props) => {
           .catch((error) => {
             console.log(error);
           });
-          navigation.navigate('RegisterOrg', { userId: 'yourUserId' });
       }}
     />
         </View>

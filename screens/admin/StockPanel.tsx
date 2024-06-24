@@ -34,14 +34,47 @@ const StockPanel = () => {
 
     const handleSendPetition = async () => {
         const savingsBoxId = await getCurrentUserSavingsBoxId();
-        sendPetition(stockAmount, setConfirmModalVisible, savingsBoxId)
-            .then(() => {
-                Alert.alert("Solicitud enviada con exito", "", [
-                    { text: "OK", onPress: () => navigation.navigate('Dashboard') }
-                ]);
+
+        // Step 1: Fetch the savings box document
+        firestore()
+            .collection('savingsBoxes')
+            .doc(savingsBoxId)
+            .get()
+            .then(documentSnapshot => {
+                if (documentSnapshot.exists) {
+
+                    const { actionPrice } = documentSnapshot.data();
+
+
+                    const totalInvestmentToAdd = stockAmount * actionPrice;
+
+
+                    sendPetition(stockAmount, setConfirmModalVisible, savingsBoxId)
+                        .then(() => {
+                            firestore()
+                                .collection('savingsBoxes')
+                                .doc(savingsBoxId)
+                                .update({
+                                    'total invertido en caja': firestore.FieldValue.increment(totalInvestmentToAdd),
+                                })
+                                .then(() => {
+                                    Alert.alert("Solicitud enviada con éxito", "", [
+                                        { text: "OK", onPress: () => navigation.navigate('Dashboard') }
+                                    ]);
+                                })
+                                .catch((error) => {
+                                    console.log('Error updating total investment:', error);
+                                });
+                        })
+                        .catch(() => {
+                            Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
+                        });
+                } else {
+                    console.log('No such document!');
+                }
             })
-            .catch(() => {
-                Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
+            .catch(error => {
+                console.log('Error getting document:', error);
             });
     };
 

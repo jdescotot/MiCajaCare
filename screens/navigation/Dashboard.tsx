@@ -60,7 +60,7 @@ const Dashboard = () => {
                     totalInvestment: userDetails.totalInvestment || 0,
                 });
 
-                if (savingsBoxData.loanInterestRate === 0 || savingsBoxData.loanInterestRate == null || savingsBoxData.latePaymentInterestRate === 0 || savingsBoxData.actionPrice === null || savingsBoxData.latePaymentInterestRate === null) {
+                if ((savingsBoxData.loanInterestRate === 0 || savingsBoxData.loanInterestRate == null || savingsBoxData.latePaymentInterestRate === 0 || savingsBoxData.actionPrice === null || savingsBoxData.latePaymentInterestRate === null) && isAdmin) {
                     navigation.navigate('RegisterOrg', { userId: userId });
                 }
             }

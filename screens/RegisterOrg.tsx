@@ -23,7 +23,7 @@ const RegisterOrg = ({ navigation, route }: Props) => {
   const [latePaymentInterestRate, setLatePaymentInterestRate] = useState(0);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-
+  const [totalInvestmentToAdd, setTotalInvestmentToAdd] = useState(0);
   console.log('el id y nombre de caja ', setSavingsBoxId, setSavingsBoxName, setStartDate, endDate);
 
   useEffect(() => {
@@ -97,6 +97,7 @@ const RegisterOrg = ({ navigation, route }: Props) => {
                   latePaymentInterestRate,
                   startDate,
                   endDate,
+                  totalInvestmentToAdd,
                 })
                 .then(() => {
                   console.log('Caja de ahorros actualizada');
