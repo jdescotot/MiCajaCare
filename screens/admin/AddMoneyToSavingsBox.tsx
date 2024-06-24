@@ -37,7 +37,7 @@ const AddMoneyToSavingsBox = () => {
         setSavingsBoxId(id);
       } catch (error) {
         console.error(error);
-        Alert.alert('Error', 'Failed to retrieve savings box ID.');
+        Alert.alert('Error', 'No se encontro el Id de la caja de ahorros.');
       }
     };
 
@@ -46,13 +46,13 @@ const AddMoneyToSavingsBox = () => {
 
   const handleAddMoney = async () => {
     if (!amountToAdd) {
-      Alert.alert('Error', 'Please fill all fields.');
+      Alert.alert('Error', 'favor complete todos los campos.');
       return;
     }
 
     const amount = parseFloat(amountToAdd);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Error', 'Invalid amount.');
+      Alert.alert('Error', 'Monto no valido.');
       return;
     }
 
@@ -61,13 +61,13 @@ const AddMoneyToSavingsBox = () => {
       const savingsBoxData = savingsBoxDoc.data();
 
       if (!savingsBoxData) {
-        Alert.alert('Error', 'Savings box not found.');
+        Alert.alert('Error', 'SNo se encontro grupo de ahorro.');
         return;
       }
 
       const updatedTotalInvestmentToAdd = (savingsBoxData.totalInvestmentToAdd || 0) + amount;
       await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd });
-      Alert.alert('Exito', 'El Dinero se agrego exitosamente.');
+      Alert.alert('Exito', 'El dinero se agrego exitosamente.');
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Un error ocurrio al agregar el dinero.');
@@ -79,12 +79,12 @@ const AddMoneyToSavingsBox = () => {
       <Text style={styles.title}>Add Money to Savings Box</Text>
       <TextInput
         style={styles.input}
-        placeholder="Amount to Add"
+        placeholder="Cantidad a agregar"
         keyboardType="numeric"
         value={amountToAdd}
         onChangeText={setAmountToAdd}
       />
-      <Button title="Add Money" onPress={handleAddMoney} />
+      <Button title="Agregar ganancia monetaria" onPress={handleAddMoney} />
     </View>
   );
 };
