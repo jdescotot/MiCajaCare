@@ -224,6 +224,13 @@ const Dashboard = () => {
                       totalInvestmentToAdd: newTotalInvestmentToAdd,
                     });
                   }
+
+                  const currentSharesBoughtThisWeek = userDetails.sharesBoughtThisWeek || 0;
+                  const newSharesBoughtThisWeek = currentSharesBoughtThisWeek + numSharesNumber;
+                  await firestore().collection('userDetails').doc(userId).update({
+                      sharesBoughtThisWeek: newSharesBoughtThisWeek,
+                  });
+
                   await firestore().collection('stockRequests').doc(id).update({
                       status: 'Aceptado',
                   });
