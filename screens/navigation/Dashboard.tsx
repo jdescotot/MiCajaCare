@@ -209,49 +209,66 @@ const Dashboard = () => {
                 await firestore().collection('loanRequests').doc(id).update({
                     status: 'Aceptado',
                 });
-            }  else {
-                // Process stock request acceptance
+            } else {
                 const stockRequestDoc = await firestore().collection('stockRequests').doc(id).get();
                 let stockRequestData = stockRequestDoc.data();
-                if (!stockRequestData) throw new Error('No se encontró la solicitud de compra de acciones');
+                if (!stockRequestData){
+                    const requestDoc = await firestore().collection('savingsBoxJoinRequests').doc(id).get();
+                    const requestData = requestDoc.data();
+                    const userId = requestData ? requestData.userId : null;
 
-                const { userId, numShares } = stockRequestData; // Corrected from numberOfStocks to numShares
-                const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
-                const userDetails = userDetailsDoc.data();
-                if (!userDetails || !userDetails.savingsBoxId) throw new Error('Detalles de usuario o ID de caja de ahorros faltantes');
+                    if (userId) {
 
-                const savingsBoxId = userDetails.savingsBoxId;
-                const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
-                const savingsBoxData = savingsBoxDoc.data();
-                if (!savingsBoxData) throw new Error('Datos de la caja de ahorros no encontrados');
-                const currentTotalInvestmentToAdd = savingsBoxData.totalInvestmentToAdd || 0;
-                const actionPrice = savingsBoxData.actionPrice;
-                const actionPriceNumber = parseFloat(actionPrice);
-                const numSharesNumber = parseInt(numShares, 10);
-                const liquidesDeCajaNumber = parseFloat(liquidesDeCaja);
+                        await firestore().collection('savingsBoxJoinRequests').doc(id).update({
+                            status: 'Aprobado',
+                        });
 
-                console.log(`actionPrice: ${actionPriceNumber}, numShares: ${numSharesNumber}, liquidesDeCaja: ${currentTotalInvestmentToAdd}`);
+                        await firestore().collection('userDetails').doc(userId).update({
+                            isActive: true,
+                        });
+                    } else {
 
-                if (isNaN(actionPriceNumber) || isNaN(numSharesNumber)) {
-                    console.error('One of the values is not a number');
-                  } else {
-                    const totalAmountToAdd = numSharesNumber * actionPriceNumber;
-                    console.log('Updating user details', totalAmountToAdd);
-                    const newTotalInvestmentToAdd = currentTotalInvestmentToAdd + totalAmountToAdd;
-                    await firestore().collection('savingsBoxes').doc(savingsBoxId).update({
-                      totalInvestmentToAdd: newTotalInvestmentToAdd,
-                    });
-                  }
+                        console.error('UserId not found for the given request.');
+                    }
+                }else{
+                    const { userId, numShares } = stockRequestData; // Corrected from numberOfStocks to numShares
+                    const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
+                    const userDetails = userDetailsDoc.data();
+                    if (!userDetails || !userDetails.savingsBoxId) throw new Error('Detalles de usuario o ID de caja de ahorros faltantes');
 
-                  const currentSharesBoughtThisWeek = userDetails.sharesBoughtThisWeek || 0;
-                  const newSharesBoughtThisWeek = currentSharesBoughtThisWeek + numSharesNumber;
-                  await firestore().collection('userDetails').doc(userId).update({
-                      sharesBoughtThisWeek: newSharesBoughtThisWeek,
-                  });
+                    const savingsBoxId = userDetails.savingsBoxId;
+                    const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
+                    const savingsBoxData = savingsBoxDoc.data();
+                    if (!savingsBoxData) throw new Error('Datos de la caja de ahorros no encontrados');
+                    const currentTotalInvestmentToAdd = savingsBoxData.totalInvestmentToAdd || 0;
+                    const actionPrice = savingsBoxData.actionPrice;
+                    const actionPriceNumber = parseFloat(actionPrice);
+                    const numSharesNumber = parseInt(numShares, 10);
+                    const liquidesDeCajaNumber = parseFloat(liquidesDeCaja);
 
-                  await firestore().collection('stockRequests').doc(id).update({
-                      status: 'Aceptado',
-                  });
+                    console.log(`actionPrice: ${actionPriceNumber}, numShares: ${numSharesNumber}, liquidesDeCaja: ${currentTotalInvestmentToAdd}`);
+
+                    if (isNaN(actionPriceNumber) || isNaN(numSharesNumber)) {
+                        console.error('One of the values is not a number');
+                      } else {
+                        const totalAmountToAdd = numSharesNumber * actionPriceNumber;
+                        console.log('Updating user details', totalAmountToAdd);
+                        const newTotalInvestmentToAdd = currentTotalInvestmentToAdd + totalAmountToAdd;
+                        await firestore().collection('savingsBoxes').doc(savingsBoxId).update({
+                          totalInvestmentToAdd: newTotalInvestmentToAdd,
+                        });
+                      }
+
+                      const currentSharesBoughtThisWeek = userDetails.sharesBoughtThisWeek || 0;
+                      const newSharesBoughtThisWeek = currentSharesBoughtThisWeek + numSharesNumber;
+                      await firestore().collection('userDetails').doc(userId).update({
+                          sharesBoughtThisWeek: newSharesBoughtThisWeek,
+                      });
+
+                      await firestore().collection('stockRequests').doc(id).update({
+                          status: 'Aceptado',
+                      });
+                }
             }
 
             Alert.alert("Solicitud aceptada con éxito");

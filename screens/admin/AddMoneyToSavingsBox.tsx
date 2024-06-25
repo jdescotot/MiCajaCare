@@ -73,8 +73,8 @@ const AddMoneyToSavingsBox = () => {
         savingsBoxId: savingsBoxId,
         amount: amount,
         eventExplanation: eventExplanation,
-        status: 'Aceptado', // Automatically set the status to "Aceptado"
-        createdAt: firestore.FieldValue.serverTimestamp(), // Assuming you want to record when this was created
+        status: 'Aceptado',
+        createdAt: firestore.FieldValue.serverTimestamp(),
       });
 
       Alert.alert('Exito', 'El dinero se agrego exitosamente.');
