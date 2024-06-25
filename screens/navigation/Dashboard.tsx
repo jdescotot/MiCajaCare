@@ -20,6 +20,10 @@ const Dashboard = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [liquidesDeCaja, setLiquidesDeCaja] = useState(0);
 
+    useEffect(() => {
+        navigation.setOptions({ title: 'Inicio' }); // Cambia el título aquí
+    }, [navigation]);
+
     const fetchData = async () => {
         try {
             const user = auth().currentUser;

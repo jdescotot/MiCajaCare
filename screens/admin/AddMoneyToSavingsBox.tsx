@@ -8,11 +8,17 @@ import { updateSavingsBox } from '../../services/SavingsBoxService';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import styles from '../../styles/PanelStyle';
+import { useNavigation }  from '@react-navigation/native';
 
 const AddMoneyToSavingsBox = () => {
   const [savingsBoxId, setSavingsBoxId] = useState('');
   const [amountToAdd, setAmountToAdd] = useState('');
   const [eventExplanation, setEventExplanation] = useState(''); // State for event explanation
+  
+  const navigation = useNavigation();
+  useEffect(() => {
+    navigation.setOptions({ title: 'Ganancias por Eventos' }); // Cambia el título aquí
+  }, [navigation]);
 
   const getCurrentUserSavingsBoxId = async () => {
     const user = auth().currentUser;
@@ -86,7 +92,7 @@ const AddMoneyToSavingsBox = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Money to Savings Box</Text>
+      <Text style={styles.title}>Ganancias por Eventos</Text>
       <TextInput
         style={styles.input}
         placeholder="Cantidad a agregar"
@@ -102,6 +108,7 @@ const AddMoneyToSavingsBox = () => {
       />
       <Button title="Agregar ganancia monetaria" onPress={handleAddMoney} />
     </View>
+    
   );
 };
 

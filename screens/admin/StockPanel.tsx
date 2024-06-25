@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React, { useState} from 'react';
+import React, { useState, useEffect} from 'react';
 import { View, Text, Button, TextInput, Modal, Dimensions  } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
@@ -31,6 +31,10 @@ const StockPanel = () => {
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
     const windowWidth = Dimensions.get('window').width;
     const navigation = useNavigation();
+
+    useEffect(() => {
+        navigation.setOptions({ title: 'Acciones' }); // Cambia el título aquí
+    }, [navigation]);
 
     const handleSendPetition = async () => {
         const savingsBoxId = await getCurrentUserSavingsBoxId();
