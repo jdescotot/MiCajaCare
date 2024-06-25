@@ -3,6 +3,7 @@
 
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import {Alert}  from 'react-native';
 
 export const requestLoan = async (
   loanAmount: number,
@@ -11,8 +12,21 @@ export const requestLoan = async (
   loanReason: string,
   loanDuration: number,
   loanDetail: string,
+  totalInvestmentToAdd: number,
 ) => {
   console.log(`Enviando solicitud de préstamo para ${loanAmount}...`);
+
+  if (loanAmount > totalInvestmentToAdd) {
+    Alert.alert(
+      'Error de validación',
+      'El monto solicitado es mayor al dinero en caja',
+      [
+        { text: 'OK', onPress: () => setLoanModalVisible(false) }
+      ],
+      { cancelable: false }
+    );
+    return;
+  }
 
   const user = auth().currentUser;
   if (user) {
