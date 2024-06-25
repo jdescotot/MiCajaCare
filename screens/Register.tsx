@@ -253,7 +253,7 @@ const Register = ({ navigation }: Props) => {
                         .then(() => {
                           requestJoinSavingsBox(userId, savingsBoxId, name, setModalVisible)
                             .then(() => {
-                              console.log('Petition for joining savings box created');
+                              console.log('Peticion para unirse a caja de ahorro creada');
                               navigation.navigate('Dashboard');
                             })
                             .catch((error) => {
