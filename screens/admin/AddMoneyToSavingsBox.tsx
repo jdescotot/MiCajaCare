@@ -12,6 +12,7 @@ import styles from '../../styles/PanelStyle';
 const AddMoneyToSavingsBox = () => {
   const [savingsBoxId, setSavingsBoxId] = useState('');
   const [amountToAdd, setAmountToAdd] = useState('');
+  const [eventExplanation, setEventExplanation] = useState(''); // State for event explanation
 
   const getCurrentUserSavingsBoxId = async () => {
     const user = auth().currentUser;
@@ -45,8 +46,8 @@ const AddMoneyToSavingsBox = () => {
   }, []);
 
   const handleAddMoney = async () => {
-    if (!amountToAdd) {
-      Alert.alert('Error', 'favor complete todos los campos.');
+    if (!amountToAdd || !eventExplanation) { // Check if eventExplanation is provided
+      Alert.alert('Error', 'Favor complete todos los campos.');
       return;
     }
 
@@ -61,12 +62,21 @@ const AddMoneyToSavingsBox = () => {
       const savingsBoxData = savingsBoxDoc.data();
 
       if (!savingsBoxData) {
-        Alert.alert('Error', 'SNo se encontro grupo de ahorro.');
+        Alert.alert('Error', 'No se encontro grupo de ahorro.');
         return;
       }
 
       const updatedTotalInvestmentToAdd = (savingsBoxData.totalInvestmentToAdd || 0) + amount;
       await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd });
+
+      await firestore().collection('loanRequests').add({
+        savingsBoxId: savingsBoxId,
+        amount: amount,
+        eventExplanation: eventExplanation,
+        status: 'Aceptado', // Automatically set the status to "Aceptado"
+        createdAt: firestore.FieldValue.serverTimestamp(), // Assuming you want to record when this was created
+      });
+
       Alert.alert('Exito', 'El dinero se agrego exitosamente.');
     } catch (error) {
       console.error(error);
@@ -83,6 +93,12 @@ const AddMoneyToSavingsBox = () => {
         keyboardType="numeric"
         value={amountToAdd}
         onChangeText={setAmountToAdd}
+      />
+      <TextInput // Input for event explanation
+        style={styles.input}
+        placeholder="Explicación del evento"
+        value={eventExplanation}
+        onChangeText={setEventExplanation}
       />
       <Button title="Agregar ganancia monetaria" onPress={handleAddMoney} />
     </View>
