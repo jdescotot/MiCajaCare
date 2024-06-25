@@ -37,7 +37,7 @@ const App = () => {
         <Stack.Screen
           name="Landing"
           component={Landing}
-          options={{title: 'Welcome'}}
+          options={{title: 'Bienvenido'}}
         />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
