@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/RootStackParams';
 import { firebase } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import { requestJoinSavingsBox } from '../services/PetitionService';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -26,6 +27,8 @@ const Register = ({ navigation }: Props) => {
   const [savingsBoxName, setSavingsBoxName] = useState('');
   const [isNewBox, setIsNewBox] = useState(false);
   const [doubleBackToExitPressedOnce, setDoubleBackToExitPressedOnce] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
 
   useEffect(() => {
     const backAction = () => {
@@ -158,6 +161,7 @@ const Register = ({ navigation }: Props) => {
                     .collection('userDetails')
                     .doc(userId)
                     .set({
+                      name: name,
                       amountOwed: 0,
                       amountTaken: 0,
                       nextPaymentDate: null,
@@ -175,6 +179,7 @@ const Register = ({ navigation }: Props) => {
                     .collection('userDetails')
                     .doc(userId)
                     .set({
+                      name: name,
                       amountOwed: 0,
                       amountTaken: 0,
                       nextPaymentDate: null,
@@ -216,6 +221,7 @@ const Register = ({ navigation }: Props) => {
                         .collection('userDetails')
                         .doc(userId)
                         .set({
+                          name: name,
                           amountOwed: 0,
                           amountTaken: 0,
                           nextPaymentDate: null,
@@ -233,6 +239,7 @@ const Register = ({ navigation }: Props) => {
                         .collection('userDetails')
                         .doc(userId)
                         .set({
+                          name: name,
                           amountOwed: 0,
                           amountTaken: 0,
                           nextPaymentDate: null,
@@ -244,7 +251,14 @@ const Register = ({ navigation }: Props) => {
                           isActive: false,
                         })
                         .then(() => {
-                          navigation.navigate('Dashboard');
+                          requestJoinSavingsBox(userId, savingsBoxId, name, setModalVisible)
+                            .then(() => {
+                              console.log('Petition for joining savings box created');
+                              navigation.navigate('Dashboard');
+                            })
+                            .catch((error) => {
+                              console.error('Error creando peticion para entrar a grupo de Ahorro:', error);
+                            });
                         })
                         .catch((error) => {
                           console.log('Error actualizando usuario con caja de ahorro:', error);

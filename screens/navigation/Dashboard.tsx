@@ -12,6 +12,7 @@ const Dashboard = () => {
     const navigation = useNavigation();
     const [pendingRequests, setPendingRequests] = useState([]);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isActive, setIsActive] = useState(true);
     const [data, setData] = useState({});
     const [pastRequests, setPastRequests] = useState([]);
     const screenWidth = Dimensions.get('window').width;
@@ -50,6 +51,8 @@ const Dashboard = () => {
 
                 if (!userDetails) {
                     throw new Error('Detalles de usuario no validos o faltantes');
+                }else{
+                    setIsActive(userDetails.isActive);
                 }
 
                 setData({
@@ -121,17 +124,32 @@ const Dashboard = () => {
                 .where('savingsBoxId', '==', savingsBoxId)
                 .where('status', '==', 'Pendiente')
                 .get();
-            const requestsPromise = firestore().collection('stockRequests')
+            const stockRequestsPromise = firestore().collection('stockRequests')
+                .where('savingsBoxId', '==', savingsBoxId)
+                .where('status', '==', 'Pendiente')
+                .get();
+            const savingsBoxJoinRequestsPromise = firestore().collection('savingsBoxJoinRequests')
                 .where('savingsBoxId', '==', savingsBoxId)
                 .where('status', '==', 'Pendiente')
                 .get();
 
-            const [loanRequestsSnapshot, requestsSnapshot] = await Promise.all([loanRequestsPromise, requestsPromise]);
+            const [loanRequestsSnapshot, stockRequestsSnapshot, savingsBoxJoinRequestsSnapshot] = await Promise.all([loanRequestsPromise, stockRequestsPromise, savingsBoxJoinRequestsPromise]);
 
             const loanRequests = loanRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const requests = requestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const stockRequests = stockRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const savingsBoxJoinRequests = await Promise.all(savingsBoxJoinRequestsSnapshot.docs.map(async doc => {
+                const request = doc.data();
+                const userDetails = await firestore().collection('userDetails').doc(request.userId).get();
+                const userName = userDetails.data()?.name || 'Unknown';
+                return {
+                    id: doc.id,
+                    ...request,
+                    requestType: 'solicitud de admisión',
+                    userName: userName
+                };
+            }));
 
-            const allRequests = [...loanRequests, ...requests];
+            const allRequests = [...loanRequests, ...stockRequests, ...savingsBoxJoinRequests];
             setPendingRequests(allRequests);
             fetchAndDisplayUserRequests();
         } catch (error) {
