@@ -38,7 +38,11 @@ const LoansPanel = () => {
     const [loanCategory, setLoanCategory] = useState('personal');
     const [totalWithInterest, setTotalWithInterest] = useState(0);
     const [interestRate, setInterestRate] = useState(0);
+    
     const navigation = useNavigation();
+    useEffect(() => {
+        navigation.setOptions({ title: 'Préstamos' }); // Cambia el título aquí
+    }, [navigation]);
 
     const confirmLoanRequest = async () => {
         try {

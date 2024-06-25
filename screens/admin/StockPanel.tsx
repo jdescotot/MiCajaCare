@@ -32,6 +32,10 @@ const StockPanel = () => {
     const windowWidth = Dimensions.get('window').width;
     const navigation = useNavigation();
 
+    useEffect(() => {
+        navigation.setOptions({ title: 'Acciones' }); // Cambia el título aquí
+    }, [navigation]);
+
     const handleSendPetition = async () => {
         const savingsBoxId = await getCurrentUserSavingsBoxId();
 
