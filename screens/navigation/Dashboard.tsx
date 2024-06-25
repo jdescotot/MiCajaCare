@@ -145,7 +145,7 @@ const Dashboard = () => {
                     id: doc.id,
                     ...request,
                     requestType: 'solicitud de admisión',
-                    userName: userName
+                    userName: userName,
                 };
             }));
 
