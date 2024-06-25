@@ -210,8 +210,12 @@ const Dashboard = () => {
                     pendingPayments: pendingPayments,
                 });
 
+                const today = new Date();
+                const loanDate = today.toISOString();
+
                 await firestore().collection('loanRequests').doc(id).update({
                     status: 'Aceptado',
+                    'Fecha de prestamo': loanDate,
                 });
             } else {
                 const stockRequestDoc = await firestore().collection('stockRequests').doc(id).get();
