@@ -306,6 +306,7 @@ const Dashboard = () => {
 
                 return (
                     <View style={styles.requestContainer} key={index}>
+                         <Text>{`Solicitante: ${item.userName}`}</Text>
                         {item.loanAmount && <Text>{`Monto del préstamo: ${item.loanAmount}`}</Text>}
                         {item.loanDetail && <Text>{`Detalle del préstamo: ${item.loanDetail}`}</Text>}
                         {item.loanDuration && <Text>{`Duración del préstamo: ${item.loanDuration} meses`}</Text>}
