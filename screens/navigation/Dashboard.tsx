@@ -185,39 +185,44 @@ const Dashboard = () => {
     const handleAccept = async (id) => {
         console.log("Procesando aceptación", id);
         try {
-
             const requestDoc = await firestore().collection('loanRequests').doc(id).get();
             let requestData = requestDoc.data();
 
-
             if (requestData && requestData.loanAmount !== undefined) {
-
-                const { userId, loanAmount, loanDuration } = requestData;
+                const { userId, loanAmount, loanDuration } = requestData; // Removed loanDate from destructuring
                 const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
                 const userDetails = userDetailsDoc.data();
                 if (!userDetails) throw new Error('No se encontró información de usuario');
 
-                const currentAmountTaken = userDetails.amountTaken || 0;
-                const currentAmountOwed = userDetails.amountOwed || 0;
+                const currentAmountTaken = Number(userDetails.amountTaken.toFixed(2)) || 0;
+                const currentAmountOwed = Number(userDetails.amountOwed.toFixed(2)) || 0;
                 const newAmountTaken = currentAmountTaken + loanAmount;
                 const newAmountOwed = currentAmountOwed + loanAmount;
                 const nextPayment = loanAmount / loanDuration;
                 const pendingPayments = loanDuration;
+                const initialNextPaymentDate = new Date();
+                initialNextPaymentDate.setMonth(initialNextPaymentDate.getMonth() + 1);
+                const nextPaymentDate = initialNextPaymentDate.toISOString().slice(0, 10);
 
                 await firestore().collection('userDetails').doc(userId).update({
                     amountTaken: newAmountTaken,
                     amountOwed: newAmountOwed,
                     pendingPayments: pendingPayments,
+                    nextPaymentDate: nextPaymentDate,
                 });
 
-                const today = new Date();
-                const loanDate = today.toISOString();
-
+                const loanDate = new Date();
+                const finalPaymentDate = new Date(loanDate);
+                finalPaymentDate.setMonth(loanDate.getMonth() + loanDuration);
+                const formattedFinalPaymentDate = finalPaymentDate.toISOString().slice(0, 10);
+                console.log('entre aqui aver que sale ');
                 await firestore().collection('loanRequests').doc(id).update({
                     status: 'Aceptado',
-                    'Fecha de prestamo': loanDate,
+                    'Fecha de prestamo': loanDate.toISOString().slice(0, 10),
+                    nextPaymentDate: formattedFinalPaymentDate,
                 });
-            } else {
+
+            }  else {
                 const stockRequestDoc = await firestore().collection('stockRequests').doc(id).get();
                 let stockRequestData = stockRequestDoc.data();
                 if (!stockRequestData){

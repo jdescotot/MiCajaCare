@@ -2,14 +2,13 @@
 // loanPanel.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput, Modal, Dimensions} from 'react-native';
+import { View, Text, Button, TextInput, Modal, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { requestLoan } from '../../services/LoanService';
 import styles from '../../styles/PanelStyle';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const getCurrentUserSavingsBoxId = async () => {
@@ -41,7 +40,7 @@ const LoansPanel = () => {
     
     const navigation = useNavigation();
     useEffect(() => {
-        navigation.setOptions({ title: 'Préstamos' }); // Cambia el título aquí
+        navigation.setOptions({ title: 'Préstamos' });
     }, [navigation]);
 
     const confirmLoanRequest = async () => {
@@ -69,7 +68,7 @@ const LoansPanel = () => {
           throw new Error('Savings box not found');
         }
         return doc.data();
-      };
+    };
 
     const getInterestRate = async (savingsBoxId) => {
         const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
@@ -85,18 +84,27 @@ const LoansPanel = () => {
     const windowWidth = Dimensions.get('window').width;
 
     const handleRequestLoan = async () => {
-        const savingsBoxId = await getCurrentUserSavingsBoxId();
-        const interestRate = await getInterestRate(savingsBoxId);
-        setInterestRate(interestRate);
-        requestLoan(loanAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail)
-            .then(() => {
-                Alert.alert("Solicitud enviada con exito", "", [
-                    { text: "OK", onPress: () => navigation.navigate('Dashboard') }
-                ]);
-            })
-            .catch(() => {
-                Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
-            });
+        try {
+            const savingsBoxId = await getCurrentUserSavingsBoxId();
+            const interestRate = await getInterestRate(savingsBoxId);
+            setInterestRate(interestRate);
+
+            const totalWithInterestParsed = parseFloat(totalWithInterest);
+            const totalAmount = loanAmount + totalWithInterestParsed;
+            const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
+            await requestLoan(roundedTotalAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail)
+                .then(() => {
+                    Alert.alert("Solicitud enviada con exito", "", [
+                        { text: "OK", onPress: () => navigation.navigate('Dashboard') }
+                    ]);
+                })
+                .catch(() => {
+                    Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
+                });
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Error al procesar la solicitud");
+        }
     };
 
     const calculateCompoundInterest = (principal, rate, timesCompounded, time) => {
@@ -106,7 +114,7 @@ const LoansPanel = () => {
     };
 
     const handleCalculateInterest = () => {
-        const total = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration / 12); // Asumiendo que `loanDuration` está en meses
+        const total = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration); // `loanDuration` ya está en meses
         setTotalWithInterest(total);
     };
 
@@ -115,10 +123,11 @@ const LoansPanel = () => {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
             const interestRate = await getInterestRate(savingsBoxId);
             setInterestRate(interestRate);
+            handleCalculateInterest();
         };
 
         fetchInterestRate();
-    }, []);
+    }, [loanAmount, loanDuration]);
 
     return (
         <View style={styles.container}>
@@ -126,25 +135,29 @@ const LoansPanel = () => {
                 <Text style={styles.title}>Solicitar prestamo</Text>
                 <Text style={styles.title2}>Ingrese la cantidad a tomar:</Text>
                 <TextInput
-                onChangeText={text => {
-                    const num = parseFloat(text);
-                    if (!isNaN(num)) {
-                        setLoanAmount(num);
-                    } else {
-                        setLoanAmount(0);
-                    }
-                }}
-                value={loanAmount.toString()}
-                keyboardType="numeric"
-                style={[styles.input, {textAlign: 'center', fontSize: 20}]} // Adjusted style
-            />
+                    onChangeText={text => {
+                        const num = parseFloat(text);
+                        if (!isNaN(num)) {
+                            setLoanAmount(num);
+                        } else {
+                            setLoanAmount(0);
+                        }
+                        handleCalculateInterest();
+                    }}
+                    value={loanAmount.toString()}
+                    keyboardType="numeric"
+                    style={[styles.input, {textAlign: 'center', fontSize: 20}]}
+                />
                 <Text style={styles.title2}>Seleccione el tiempo a tomar:</Text>
                 <Picker
                     selectedValue={loanDuration}
-                    onValueChange={(itemValue) => setLoanDuration(itemValue)}
+                    onValueChange={(itemValue) => {
+                        setLoanDuration(itemValue);
+                        handleCalculateInterest();
+                    }}
                 >
-                    <Picker.Item label="3 meses" value="3" />
-                    <Picker.Item label="6 meses" value="6" />
+                    <Picker.Item label="3 meses" value={3} />
+                    <Picker.Item label="6 meses" value={6} />
                 </Picker>
                 <TextInput
                     style={styles.inputWhite}
@@ -165,10 +178,9 @@ const LoansPanel = () => {
                     <Picker.Item label="Educacion" value="educacion" />
                     <Picker.Item label="Negocio" value="negocio" />
                     <Picker.Item label="Otros" value="otros" />
-
                 </Picker>
                 <Text style={styles.title2}>
-                    Total con interés: {totalWithInterest}
+                    Interés sobre el prestamo: {totalWithInterest}
                 </Text>
                 <Button
                     title="Solicitar Prestamo"
@@ -191,7 +203,7 @@ const LoansPanel = () => {
                             onChangeText={text => setLoanReason(text)}
                             value={loanReason}
                         />
-                        <Text>{`Defina el teimpo del prestamo: ${loanDuration} Meses`}</Text>
+                        <Text>{`Defina el tiempo del prestamo: ${loanDuration} Meses`}</Text>
                         <Slider
                             style={{width: windowWidth - 40, height: 70}}
                             minimumValue={3}
