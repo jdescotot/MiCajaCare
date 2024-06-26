@@ -35,7 +35,7 @@ export const requestLoan = async (
     const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
     if (userDetailsDoc.exists) {
       const userName = userDetailsDoc.data().name;
-      const cuotas = loanAmount / loanDuration; // Calculate Cuotas by dividing loanAmount by loanDuration
+      const cuotas = loanAmount / loanDuration;
       await firestore().collection('loanRequests').add({
         userId,
         name: userName,
@@ -45,7 +45,7 @@ export const requestLoan = async (
         status: 'Pendiente',
         savingsBoxId,
         loanDetail,
-        cuotas, // Add Cuotas to the document
+        cuotas,
       });
       console.log('Solicitud de préstamo enviada con éxito.');
     } else {

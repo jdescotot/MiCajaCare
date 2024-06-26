@@ -21,8 +21,17 @@ const Dashboard = () => {
     const [liquidesDeCaja, setLiquidesDeCaja] = useState(0);
 
     useEffect(() => {
-        navigation.setOptions({ title: 'Inicio' }); // Cambia el título aquí
+        navigation.setOptions({ title: 'Inicio' });
     }, [navigation]);
+
+    useEffect(() => {
+        const checkAdminAndFetchData = async () => {
+            const admin = await checkIfAdmin();
+            setIsAdmin(admin);
+            fetchPendingRequests();
+        };
+        checkAdminAndFetchData();
+    }, [isAdmin]);
 
     const fetchData = async () => {
         try {
@@ -161,15 +170,6 @@ const Dashboard = () => {
         }
     };
 
-    useEffect(() => {
-        const checkAdminAndFetchData = async () => {
-            const admin = await checkIfAdmin();
-            setIsAdmin(admin);
-            fetchPendingRequests();
-        };
-        checkAdminAndFetchData();
-    }, [isAdmin]);
-
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
         try {
@@ -301,6 +301,41 @@ const Dashboard = () => {
         await fetchPendingRequests();
     };
 
+    const fetchProximoPago = async () => {
+        try {
+            const user = auth().currentUser;
+            if (!user) throw new Error('No user found');
+            const userId = user.uid;
+
+            const loanRequestsSnapshot = await firestore().collection('loanRequests')
+                .where('userId', '==', userId)
+                .where('status', '==', 'Aceptado')
+                .get();
+
+            let totalCuotas = 0;
+            loanRequestsSnapshot.forEach(doc => {
+                const loanRequest = doc.data();
+
+                totalCuotas += loanRequest.Cuotas ? loanRequest.Cuotas : 0;
+            });
+
+            const updatedSections = sections.map(section => {
+                if (section.title === 'Vista General') {
+                    return {
+                        ...section,
+                        data: [
+                            ...section.data,
+                            { title: 'Próximo Pago', value: totalCuotas },
+                        ],
+                    };
+                }
+                return section;
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const sections = [
         {
             title: 'Vista General',
@@ -315,6 +350,7 @@ const Dashboard = () => {
                 { title: 'Pagos pendientes', value: data.pendingPayments },
                 { title: 'Solicitudes pendientes', value: pendingRequests.length },
                 { title: 'Acciones compradas esta semana', value: data.sharesBoughtThisWeek },
+                { title: 'Cantidad a Pagar', value: Math.round((data.amountTaken / data.pendingPayments) * 100) / 100 },
                 { title: 'Inversión total', value: data.totalInvestment },
             ],
             renderItem: ({ item }) => (
@@ -408,6 +444,7 @@ sections.push({
 
     useEffect(() => {
         fetchData();
+        fetchProximoPago();
     }, []);
 
     useEffect(() => {

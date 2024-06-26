@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#f9f9f9',
+    color: 'black',
     marginBottom: 16,
   },
   switchContainer: {

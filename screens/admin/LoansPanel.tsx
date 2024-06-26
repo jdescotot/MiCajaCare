@@ -38,7 +38,7 @@ const LoansPanel = () => {
     const [loanCategory, setLoanCategory] = useState('personal');
     const [totalWithInterest, setTotalWithInterest] = useState(0);
     const [interestRate, setInterestRate] = useState(0);
-    
+
     const navigation = useNavigation();
     useEffect(() => {
         navigation.setOptions({ title: 'Préstamos' }); // Cambia el título aquí
@@ -84,16 +84,25 @@ const LoansPanel = () => {
 
     const windowWidth = Dimensions.get('window').width;
 
+    const calculateCompoundInterest = (principal, rate, timesCompounded, time) => {
+        const timeInYears = time / 12;
+        const amount = principal * Math.pow((1 + rate / timesCompounded), timesCompounded * timeInYears);
+        return amount.toFixed(6);
+    };
+
+    const handleCalculateInterest = () => {
+        const total = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration);
+        setTotalWithInterest(total);
+    };
+
     const handleRequestLoan = async () => {
         try {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
             const interestRate = await getInterestRate(savingsBoxId);
             setInterestRate(interestRate);
 
-
-            const totalWithInterest = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration);
             const totalAmount = parseFloat(totalWithInterest) + loanAmount;
-            const roundedTotalAmount = Math.round(totalAmount * 100) / 100; // Round to two decimal places
+            const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
             await requestLoan(roundedTotalAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail)
                 .then(() => {
                     Alert.alert("Solicitud enviada con exito", "", [
@@ -107,17 +116,6 @@ const LoansPanel = () => {
             console.error(error);
             Alert.alert("Error al procesar la solicitud");
         }
-    };
-
-    const calculateCompoundInterest = (principal, rate, timesCompounded, time) => {
-        const timeInYears = time / 12;
-        const amount = principal * Math.pow((1 + rate / timesCompounded), timesCompounded * timeInYears);
-        return amount.toFixed(6);
-    };
-
-    const handleCalculateInterest = () => {
-        const total = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration / 12); // Asumiendo que `loanDuration` está en meses
-        setTotalWithInterest(total);
     };
 
     useEffect(() => {
