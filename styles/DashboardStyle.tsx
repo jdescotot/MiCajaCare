@@ -81,6 +81,7 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     color: 'black',
+    backgroundColor: '#f2f2f2',
 },
 touchableArea: {
     backgroundColor: '#e36f1e',

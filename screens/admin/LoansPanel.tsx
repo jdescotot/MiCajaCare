@@ -90,9 +90,10 @@ const LoansPanel = () => {
             const interestRate = await getInterestRate(savingsBoxId);
             setInterestRate(interestRate);
 
-            const totalWithInterestParsed = parseFloat(totalWithInterest);
-            const totalAmount = loanAmount + totalWithInterestParsed;
-            const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
+
+            const totalWithInterest = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration);
+            const totalAmount = parseFloat(totalWithInterest) + loanAmount;
+            const roundedTotalAmount = Math.round(totalAmount * 100) / 100; // Round to two decimal places
             await requestLoan(roundedTotalAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail)
                 .then(() => {
                     Alert.alert("Solicitud enviada con exito", "", [
@@ -178,7 +179,7 @@ const LoansPanel = () => {
 
                 </Picker>
                 <Text style={styles.title2}>
-                    Interés sobre el prestamo : {totalWithInterest}
+                    Total con interés: {totalWithInterest}
                 </Text>
                 <Button
                     title="Solicitar Prestamo"
