@@ -19,6 +19,7 @@ const Dashboard = () => {
     const fontSize = screenWidth * 0.06;
     const [refreshing, setRefreshing] = useState(false);
     const [liquidesDeCaja, setLiquidesDeCaja] = useState(0);
+    const [buttonDisabled, setButtonDisabled] = useState(false);
 
     useEffect(() => {
         navigation.setOptions({ title: 'Inicio' });
@@ -79,6 +80,7 @@ const Dashboard = () => {
                     pendingPayments: userDetails.pendingPayments || 0,
                     sharesBoughtThisWeek: userDetails.sharesBoughtThisWeek || 0,
                     totalInvestment: userDetails.totalInvestment || 0,
+                    TotalStocks: savingsBoxData.TotalStocks || 0,
                 });
 
                 if ((savingsBoxData.loanInterestRate === 0 || savingsBoxData.loanInterestRate == null || savingsBoxData.latePaymentInterestRate === 0 || savingsBoxData.actionPrice === null || savingsBoxData.latePaymentInterestRate === null) && isAdmin) {
@@ -112,8 +114,8 @@ const Dashboard = () => {
 
             const [loanRequestsSnapshot, stockRequestsSnapshot] = await Promise.all([loanRequestsPromise, stockRequestsPromise]);
 
-            const loanRequests = loanRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const stockRequests = stockRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const loanRequests = loanRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), name: doc.data().name || "Prestamo" }));
+            const stockRequests = stockRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), name: doc.data().name || "Acciones" }));
             const combinedRequests = [...loanRequests, ...stockRequests];
 
             setPastRequests(combinedRequests);
@@ -189,10 +191,13 @@ const Dashboard = () => {
             let requestData = requestDoc.data();
 
             if (requestData && requestData.loanAmount !== undefined) {
-                const { userId, loanAmount, loanDuration } = requestData; // Removed loanDate from destructuring
+                const { userId, loanAmount, loanDuration } = requestData;
                 const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
                 const userDetails = userDetailsDoc.data();
-                if (!userDetails) throw new Error('No se encontró información de usuario');
+                if (!userDetails || !userDetails.savingsBoxId) throw new Error('No se encontró información de usuario o ID de caja de ahorros');
+
+                const savingsBoxId = userDetails.savingsBoxId;
+                const savingsBoxRef = firestore().collection('savingsBoxes').doc(savingsBoxId);
 
                 const currentAmountTaken = Number(userDetails.amountTaken.toFixed(2)) || 0;
                 const currentAmountOwed = Number(userDetails.amountOwed.toFixed(2)) || 0;
@@ -204,25 +209,35 @@ const Dashboard = () => {
                 initialNextPaymentDate.setMonth(initialNextPaymentDate.getMonth() + 1);
                 const nextPaymentDate = initialNextPaymentDate.toISOString().slice(0, 10);
 
-                await firestore().collection('userDetails').doc(userId).update({
-                    amountTaken: newAmountTaken,
-                    amountOwed: newAmountOwed,
-                    pendingPayments: pendingPayments,
-                    nextPaymentDate: nextPaymentDate,
-                });
-
                 const loanDate = new Date();
                 const finalPaymentDate = new Date(loanDate);
                 finalPaymentDate.setMonth(loanDate.getMonth() + loanDuration);
                 const formattedFinalPaymentDate = finalPaymentDate.toISOString().slice(0, 10);
-                console.log('entre aqui aver que sale ');
-                await firestore().collection('loanRequests').doc(id).update({
-                    status: 'Aceptado',
-                    'Fecha de prestamo': loanDate.toISOString().slice(0, 10),
-                    nextPaymentDate: formattedFinalPaymentDate,
-                });
 
-            }  else {
+                await firestore().runTransaction(async (transaction) => {
+                    const savingsBoxDoc = await transaction.get(savingsBoxRef);
+                    if (!savingsBoxDoc.exists) {
+                        throw new Error("documento no existe!");
+                    }
+                    const currentTotalInvestmentToAdd = savingsBoxDoc.data().originalLoan || 0;
+                    const newTotalInvestmentToAdd = currentTotalInvestmentToAdd - loanAmount;
+
+                    transaction.update(savingsBoxRef, { totalInvestmentToAdd: newTotalInvestmentToAdd });
+
+                    transaction.update(firestore().collection('userDetails').doc(userId), {
+                        amountTaken: newAmountTaken,
+                        amountOwed: newAmountOwed,
+                        pendingPayments: pendingPayments,
+                        nextPaymentDate: nextPaymentDate,
+                    });
+
+                    transaction.update(firestore().collection('loanRequests').doc(id), {
+                        status: 'Aceptado',
+                        'Fecha de prestamo': loanDate.toISOString().slice(0, 10),
+                        nextPaymentDate: formattedFinalPaymentDate,
+                    });
+                });
+            } else {
                 const stockRequestDoc = await firestore().collection('stockRequests').doc(id).get();
                 let stockRequestData = stockRequestDoc.data();
                 if (!stockRequestData){
@@ -267,8 +282,10 @@ const Dashboard = () => {
                         const totalAmountToAdd = numSharesNumber * actionPriceNumber;
                         console.log('Updating user details', totalAmountToAdd);
                         const newTotalInvestmentToAdd = currentTotalInvestmentToAdd + totalAmountToAdd;
+                        const newStockAmount = savingsBoxData.TotalStocks + numSharesNumber;
                         await firestore().collection('savingsBoxes').doc(savingsBoxId).update({
                           totalInvestmentToAdd: newTotalInvestmentToAdd,
+                          TotalStocks: Number(newStockAmount),
                         });
                       }
 
@@ -290,16 +307,39 @@ const Dashboard = () => {
             console.error("Error aceptando solicitud:", error);
             Alert.alert("Error al procesar la solicitud");
         }
+        setButtonDisabled(false);
     };
 
-    const handleReject = async (id) => {
-        console.log("procesando Rechazo", id);
-        await firestore().collection('loanRequests').doc(id).update({
+const handleReject = async (id, requestType) => {
+    console.log("Procesando Rechazo", id, requestType );
+    let collectionName = '';
+
+    switch (requestType) {
+        case 'Solicitud de préstamo':
+            collectionName = 'loanRequests';
+            break;
+        case 'Compra de Acciones':
+            collectionName = 'stockRequests';
+            break;
+        case 'peticion de Acceso a caja de ahorro':
+            collectionName = 'savingsBoxJoinRequests';
+            break;
+        default:
+            console.error('Tipo de solicitud desconocido');
+            return;
+    }
+
+    try {
+        await firestore().collection(collectionName).doc(id).update({
             status: 'Rechazado',
         });
-        Alert.alert("Solicitud rechazada con exito ");
+        Alert.alert("Solicitud rechazada con éxito");
         await fetchPendingRequests();
-    };
+    } catch (error) {
+        console.error("Error al rechazar la solicitud:", error);
+        Alert.alert("Error al rechazar la solicitud");
+    }
+};
 
     const fetchProximoPago = async () => {
         try {
@@ -340,18 +380,19 @@ const Dashboard = () => {
         {
             title: 'Vista General',
             data: [
-                { title: 'Liquides de Caja', value: data.liquidesDeCaja },
-                { title: 'Precio de la acción', value: data.actionPrice },
-                { title: 'Cantidad adeudada', value: data.amountOwed },
-                { title: 'Cantidad tomada', value: data.amountTaken },
+                { title: 'Liquides de Caja', value: Math.round(data.liquidesDeCaja * 100) / 100 },
+                { title: 'Precio de la acción', value: Math.round(data.actionPrice * 100) / 100 },
+                { title: 'Cantidad adeudada', value: Math.round(data.amountOwed * 100) / 100 },
+                { title: 'Cantidad tomada', value: Math.round(data.amountTaken * 100) / 100 },
                 { title: 'Tasa de interés por pago atrasado', value: data.latePaymentInterestRate },
                 { title: 'Tasa de interés del préstamo', value: data.loanInterestRate },
                 { title: 'Fecha del próximo pago', value: data.nextPaymentDate },
                 { title: 'Pagos pendientes', value: data.pendingPayments },
                 { title: 'Solicitudes pendientes', value: pendingRequests.length },
-                { title: 'Acciones compradas esta semana', value: data.sharesBoughtThisWeek },
+                { title: 'Acciones compradas por usuario', value: data.sharesBoughtThisWeek },
                 { title: 'Cantidad a Pagar', value: Math.round((data.amountTaken / data.pendingPayments) * 100) / 100 },
                 { title: 'Inversión total', value: data.totalInvestment },
+                { title: 'Acciones totales', value: data.TotalStocks}
             ],
             renderItem: ({ item }) => (
                 <View>
@@ -373,6 +414,7 @@ const Dashboard = () => {
                 return (
                     <View style={styles.requestContainer} key={index}>
                          <Text>{`Solicitante: ${item.userName}`}</Text>
+                         <Text>{`Tipo de solicitud: ${item.requestType}`}</Text>
                         {item.loanAmount && <Text>{`Monto del préstamo: ${item.loanAmount}`}</Text>}
                         {item.loanDetail && <Text>{`Detalle del préstamo: ${item.loanDetail}`}</Text>}
                         {item.loanDuration && <Text>{`Duración del préstamo: ${item.loanDuration} meses`}</Text>}
@@ -385,11 +427,19 @@ const Dashboard = () => {
                             placeholder="Razón del rechazo"
                         />
                         <View style={styles.buttonContainer}>
-                            <Button title="Aceptar" onPress={() => handleAccept(item.id)} style={styles.requestButton} />
+                            <Button
+                                title="Aceptar" 
+                                onPress={() => {
+                                    setButtonDisabled(true);
+                                    handleAccept(item.id);
+                                }}
+                                style={styles.requestButton}
+                                disabled={buttonDisabled}
+                            />
                             <Button 
                                 title="Rechazar"
-                                onPress={() => handleReject(item.id)}
-                                style={styles.requestButton} 
+                                onPress={() => handleReject(item.id, item.requestType)}
+                                style={styles.requestButton}
                                 disabled={!rejectionText.trim()}
                             />
                         </View>
@@ -407,6 +457,7 @@ const Dashboard = () => {
             renderItem: ({ item, index }) => (
                 <View style={styles.requestContainer} key={index}>
                     <Text>{`Solicitud ${index + 1}: ${item.name}`}</Text>
+                    <Text>{`Tipo de solicitud: ${item.requestType}`}</Text>
                     <Text>{`Estado: ${item.status}`}</Text>
                     {item.response && <Text>{`Respuesta: ${item.response}`}</Text>}
                 </View>
@@ -433,6 +484,8 @@ sections.push({
                     navigation.navigate('StockPanel');
                 } else if (item === 'Eventos' && isAdmin) {
                     navigation.navigate('AddMoneyToSavingsBox');
+                } else if (item === 'Pagar') {
+                    navigation.navigate('Pagar');
                 }
             }}
         >

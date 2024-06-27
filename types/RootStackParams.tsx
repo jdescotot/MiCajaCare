@@ -11,4 +11,5 @@ export type RootStackParamList = {
     PetitionService: undefined;
     LoanService: undefined;
     AddMoneyToSavingsBox: undefined;
+    Pagar: undefined;
 };

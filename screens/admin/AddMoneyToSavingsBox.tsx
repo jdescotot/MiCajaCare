@@ -108,7 +108,6 @@ const AddMoneyToSavingsBox = () => {
       />
       <Button title="Agregar ganancia monetaria" onPress={handleAddMoney} />
     </View>
-    
   );
 };
 

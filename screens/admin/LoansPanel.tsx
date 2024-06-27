@@ -38,6 +38,7 @@ const LoansPanel = () => {
     const [loanCategory, setLoanCategory] = useState('personal');
     const [totalWithInterest, setTotalWithInterest] = useState(0);
     const [interestRate, setInterestRate] = useState(0);
+    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
     const navigation = useNavigation();
     useEffect(() => {
@@ -50,7 +51,6 @@ const LoansPanel = () => {
             const interestRate = await getInterestRate(savingsBoxId);
             setInterestRate(interestRate);
             await requestLoan(loanAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail);
-            Alert.alert("Solicitud enviada con éxito");
             setConfirmModalVisible(false);
         } catch (error) {
             if (error.message === 'No se ha conectado a su cuenta no puede hacer peticiones' || error.message === 'Documento de usuario o caja de ahorro no valido o faltante') {
@@ -96,26 +96,25 @@ const LoansPanel = () => {
     };
 
     const handleRequestLoan = async () => {
+        setIsButtonDisabled(true);
         try {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
             const interestRate = await getInterestRate(savingsBoxId);
             setInterestRate(interestRate);
 
-            const totalAmount = parseFloat(totalWithInterest) + loanAmount;
+            const totalAmount = parseFloat(totalWithInterest);
             const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
-            await requestLoan(roundedTotalAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail)
-                .then(() => {
-                    Alert.alert("Solicitud enviada con exito", "", [
-                        { text: "OK", onPress: () => navigation.navigate('Dashboard') }
-                    ]);
-                })
+            await requestLoan(roundedTotalAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail, loanAmount)
                 .catch(() => {
                     Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
                 });
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                navigation.navigate('Dashboard');
         } catch (error) {
             console.error(error);
             Alert.alert("Error al procesar la solicitud");
         }
+        setIsButtonDisabled(false);
     };
 
     useEffect(() => {
@@ -182,7 +181,7 @@ const LoansPanel = () => {
                 <Button
                     title="Solicitar Prestamo"
                     onPress={handleRequestLoan}
-                    disabled={loanDetail === ''}
+                    disabled={loanDetail === '' || isButtonDisabled}
                 />
                 <Modal
                     animationType="slide"

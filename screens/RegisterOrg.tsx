@@ -25,6 +25,7 @@ const RegisterOrg = ({ navigation, route }: Props) => {
   const [endDate, setEndDate] = useState(new Date());
   const [totalInvestmentToAdd, setTotalInvestmentToAdd] = useState(0);
   const [efectivoEnCaja, setEfectivoEnCaja] = useState(0);
+  const [ TotalStocks, setTotalStocks] = useState(0);
 
   console.log('el id y nombre de caja ', setSavingsBoxId, setSavingsBoxName, setStartDate, endDate);
 
@@ -101,6 +102,7 @@ const RegisterOrg = ({ navigation, route }: Props) => {
                   endDate,
                   totalInvestmentToAdd,
                   efectivoEnCaja,
+                  TotalStocks,
                 })
                 .then(() => {
                   console.log('Caja de ahorros actualizada');

@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 // Register.tsx
 import React, {useState, useEffect} from 'react';
-import {ScrollView, View, Text, TextInput, Button, Switch, KeyboardAvoidingView, Platform, BackHandler, ToastAndroid} from 'react-native';
+import {ScrollView, View, Text, TextInput, Button, Switch, KeyboardAvoidingView, Platform, BackHandler, ToastAndroid, Alert} from 'react-native';
 
 import styles from '../styles/RegisterStyle';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -107,7 +107,7 @@ const Register = ({ navigation }: Props) => {
               onValueChange={setIsNewBox}
               style={styles.switch}
             />
-            <Text style={styles.label}>Estoy creando nueo grupo de Ahorro?</Text>
+            <Text style={styles.label}>Estoy creando nuevo grupo de Ahorro?</Text>
           </View>
           {isNewBox ? (
             <View>
@@ -200,77 +200,63 @@ const Register = ({ navigation }: Props) => {
                 .catch((error) => {
                   console.log('Error creating new savings box:', error);
                 });
-            } else {
-              firestore()
-              .collection('savingsBoxes')
-              .doc(savingsBoxId)
-              .get()
-              .then((doc) => {
-                if (doc.exists) {
-                  console.log(`Savings Box ID: ${doc.id}, Name: ${doc.data().name}`);
-
-                  firestore()
-                    .collection('savingsBoxes')
-                    .doc(savingsBoxId)
-                    .update({
-                      members: firestore.FieldValue.arrayUnion(userId),
-                    })
-                    .then(() => {
-                      console.log('usuario agregado a la caja de ahorro existente');
+            } else {// Arriba es como funciona el logeo caundo es una caja nueva y abajo cuando es una caja existente
+              if (savingsBoxId) {
+                firestore()
+                  .collection('savingsBoxes')
+                  .doc(savingsBoxId)
+                  .get()
+                  .then((doc) => {
+                    if (doc.exists) {
+                      console.log(`Savings Box ID: ${doc.id}, Name: ${doc.data().name}`);
                       firestore()
-                        .collection('userDetails')
-                        .doc(userId)
-                        .set({
-                          name: name,
-                          amountOwed: 0,
-                          amountTaken: 0,
-                          nextPaymentDate: null,
-                          pendingPayments: 0,
-                          sharesBoughtThisWeek: 0,
-                          totalInvestment: 0,
-                          savingsBoxId: savingsBoxId,
-                          isAdmin: false,
-                          isActive: false,
-                        })
-                        .catch((error) => {
-                          console.log('Error creating user details:', error);
-                        });
-                      firestore()
-                        .collection('userDetails')
-                        .doc(userId)
-                        .set({
-                          name: name,
-                          amountOwed: 0,
-                          amountTaken: 0,
-                          nextPaymentDate: null,
-                          pendingPayments: 0,
-                          sharesBoughtThisWeek: 0,
-                          totalInvestment: 0,
-                          savingsBoxId: savingsBoxId,
-                          isAdmin: false,
-                          isActive: false,
+                        .collection('savingsBoxes')
+                        .doc(savingsBoxId)
+                        .update({
+                          members: firestore.FieldValue.arrayUnion(userId),
                         })
                         .then(() => {
-                          requestJoinSavingsBox(userId, savingsBoxId, name, setModalVisible)
+                          console.log('User added to the existing savings box');
+                          firestore()
+                            .collection('userDetails')
+                            .doc(userId)
+                            .set({
+                              name: name,
+                              amountOwed: 0,
+                              amountTaken: 0,
+                              nextPaymentDate: null,
+                              pendingPayments: 0,
+                              sharesBoughtThisWeek: 0,
+                              totalInvestment: 0,
+                              savingsBoxId: savingsBoxId,
+                              isAdmin: false,
+                              isActive: false,
+                            })
                             .then(() => {
-                              console.log('Peticion para unirse a caja de ahorro creada');
-                              navigation.navigate('Dashboard');
+                              requestJoinSavingsBox(userId, savingsBoxId, name, setModalVisible)
+                                .then(() => {
+                                  console.log('Request to join savings box created');
+                                  navigation.navigate('Dashboard');
+                                })
+                                .catch((error) => {
+                                  console.error('Error creating request to join savings group:', error);
+                                });
                             })
                             .catch((error) => {
-                              console.error('Error creando peticion para entrar a grupo de Ahorro:', error);
+                              console.log('Error creating user details:', error);
                             });
                         })
                         .catch((error) => {
-                          console.log('Error actualizando usuario con caja de ahorro:', error);
+                          console.log('Error adding user to savings box', error);
                         });
-                    })
-                    .catch((error) => {
-                      console.log('Error al agregar usario a caja de ahorro', error);
-                    });
-                } else {
-                  console.log('No hay una caja de ahorro con ese nombre');
-                }
-              });
+                    } else {
+                      console.log('No hay una caja de Ahorro con ese nombre');
+                      Alert.alert('No hay una caja de Ahorro con ese nombre');
+                    }
+                  });
+              } else {
+                console.log('No savingsBoxId provided');
+              }
             }
             console.log('Usuario creado');
           })

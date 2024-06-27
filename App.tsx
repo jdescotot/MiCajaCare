@@ -12,6 +12,7 @@ import LoansPanel from './screens/admin/LoansPanel';
 import Stockpanel from './screens/admin/StockPanel';
 import firebase from './firebaseConfig';
 import AddMoneyToSavingsBox from './screens/admin/AddMoneyToSavingsBox';
+import Pagar from './screens/admin/Pagar';
 
 const Stack = createStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -51,6 +52,7 @@ const App = () => {
         <Stack.Screen name="LoansPanel" component={LoansPanel} />
         <Stack.Screen name="StockPanel" component={Stockpanel} />
         <Stack.Screen name="AddMoneyToSavingsBox" component={AddMoneyToSavingsBox} />
+        <Stack.Screen name="Pagar" component={Pagar} />
       </Stack.Navigator>
     </NavigationContainer>
   );

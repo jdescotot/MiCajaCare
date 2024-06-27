@@ -16,15 +16,15 @@ export const sendPetition = async (
     const userId = user.uid;
     const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
     if (userDetailsDoc.exists) {
-      const userName = userDetailsDoc.data().name;
+      const name = userDetailsDoc.data().name;
       await firestore().collection('stockRequests').add({
         userId,
-        userName,
+        name,
         numShares,
         status: 'Pendiente',
         savingsBoxId,
+        requestType: 'Compra de Acciones',
       });
-      console.log('Petición enviada con éxito.');
     } else {
       console.log('No se encontró el nombre de usuario en los detalles del usuario.');
     }
@@ -66,9 +66,10 @@ export const requestJoinSavingsBox = async (
 
   await firestore().collection('savingsBoxJoinRequests').add({
     userId,
-    userName: name,
+    name: name,
     savingsBoxId,
     status: 'Pendiente',
+    requestType: 'peticion de Acceso a caja de ahorro',
   });
 
   console.log('Solicitud enviada con éxito.');

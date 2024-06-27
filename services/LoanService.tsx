@@ -1,9 +1,8 @@
 /* eslint-disable prettier/prettier */
 // loanService.ts
-
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import {Alert}  from 'react-native';
+import { Alert } from 'react-native';
 
 export const requestLoan = async (
   loanAmount: number,
@@ -12,46 +11,51 @@ export const requestLoan = async (
   loanReason: string,
   loanDuration: number,
   loanDetail: string,
-  totalInvestmentToAdd: number,
+  originalLoan: number,
 ) => {
   console.log(`Enviando solicitud de préstamo para ${loanAmount}...`);
+    const user = auth().currentUser;
+    if (user) {
+      const userId = user.uid;
+      const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
+      if (userDetailsDoc.exists) {
+        const userName = userDetailsDoc.data().name;
+        const cuotas = loanAmount / loanDuration;
 
-  if (loanAmount > totalInvestmentToAdd) {
-    Alert.alert(
-      'Error de validación',
-      'El monto solicitado es mayor al dinero en caja',
-      [
-        { text: 'OK', onPress: () => setLoanModalVisible(false) }
-      ],
-      { cancelable: false }
-    );
-    return;
-  }
+        await firestore().runTransaction(async (transaction) => {
+          const savingsBoxRef = firestore().collection('savingsBoxes').doc(savingsBoxId);
+          const savingsBoxDoc = await transaction.get(savingsBoxRef);
 
-  const user = auth().currentUser;
-  if (user) {
-    const userId = user.uid;
+          if (!savingsBoxDoc.exists) {
+            throw new Error("documento no existe!");
+          }
 
-    const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
-    if (userDetailsDoc.exists) {
-      const userName = userDetailsDoc.data().name;
-      const cuotas = loanAmount / loanDuration;
-      await firestore().collection('loanRequests').add({
-        userId,
-        name: userName,
-        loanAmount,
-        loanReason,
-        loanDuration,
-        status: 'Pendiente',
-        savingsBoxId,
-        loanDetail,
-        cuotas,
-      });
-      console.log('Solicitud de préstamo enviada con éxito.');
-    } else {
-      console.log('Detalles del usuario no encontrados.');
+          const currentTotalInvestmentToAdd = savingsBoxDoc.data().totalInvestmentToAdd || 0;
+          const newTotalInvestmentToAdd = currentTotalInvestmentToAdd - loanAmount;
+          if (newTotalInvestmentToAdd < 0) {
+            console.log('No hay suficiente dinero en caja para cubrir el préstamo');
+            Alert.alert('Solicitud requeire mas dinero del que hay disponible');
+          }else{
+            await firestore().collection('loanRequests').add({
+              userId,
+              name: userName,
+              loanAmount,
+              loanReason,
+              loanDuration,
+              status: 'Pendiente',
+              savingsBoxId,
+              loanDetail,
+              cuotas,
+              requestType: 'Solicitud de préstamo',
+              originalLoan,
+            });
+            Alert.alert('Solicitud enviada con Exito');
+          }
+        });
+      } else {
+        console.log('Detalles del usuario no encontrados.');
+      }
     }
-  }
 
-  setLoanModalVisible(false);
+    setLoanModalVisible(false);
 };
