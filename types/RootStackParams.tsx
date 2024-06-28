@@ -3,6 +3,7 @@ export type RootStackParamList = {
     Landing: undefined;
     Login: undefined;
     Register: undefined;
+    RegisterAdmin: undefined;
     RegisterOrg: { userId: string };
     RestorePassword: undefined;
     Dashboard: undefined;
@@ -12,4 +13,5 @@ export type RootStackParamList = {
     LoanService: undefined;
     AddMoneyToSavingsBox: undefined;
     Pagar: undefined;
+    JoinSavingsBox: undefined;
 };

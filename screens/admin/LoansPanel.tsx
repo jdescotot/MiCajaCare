@@ -36,7 +36,7 @@ const LoansPanel = () => {
     const [loanDuration, setLoanDuration] = useState(3);
     const [loanDetail, setLoanDetail] = useState('');
     const [loanCategory, setLoanCategory] = useState('personal');
-    const [totalWithInterest, setTotalWithInterest] = useState(0);
+    const [interest, setInterest] = useState(0);
     const [interestRate, setInterestRate] = useState(0);
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
@@ -48,8 +48,8 @@ const LoansPanel = () => {
     const confirmLoanRequest = async () => {
         try {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
-            const interestRate = await getInterestRate(savingsBoxId);
-            setInterestRate(interestRate);
+            const rate = await getInterestRate(savingsBoxId);
+            setInterestRate(rate);
             await requestLoan(loanAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail);
             setConfirmModalVisible(false);
         } catch (error) {
@@ -63,14 +63,6 @@ const LoansPanel = () => {
         }
     };
 
-    const getSavingsBoxDetails = async (savingsBoxId: string) => {
-        const doc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
-        if (!doc.exists) {
-          throw new Error('Savings box not found');
-        }
-        return doc.data();
-      };
-
     const getInterestRate = async (savingsBoxId) => {
         const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
         const savingsBoxData = savingsBoxDoc.data();
@@ -78,7 +70,6 @@ const LoansPanel = () => {
         if (!savingsBoxData || savingsBoxData.loanInterestRate === undefined) {
             throw new Error('Documento de caja de ahorro no valido o tasa de interés faltante');
         }
-
         return savingsBoxData.loanInterestRate;
     };
 
@@ -86,25 +77,24 @@ const LoansPanel = () => {
 
     const calculateCompoundInterest = (principal, rate, timesCompounded, time) => {
         const timeInYears = time / 12;
-        const amount = principal * Math.pow((1 + rate / timesCompounded), timesCompounded * timeInYears);
+        const decimalRate = rate / 100;
+        console.log("la prueba es de ",Math.pow((1 + decimalRate / timesCompounded), timesCompounded * timeInYears),principal);
+        const amount = principal * (Math.pow((1 + decimalRate / timesCompounded), timesCompounded * timeInYears));
         return amount.toFixed(6);
     };
 
-    const handleCalculateInterest = () => {
-        const total = calculateCompoundInterest(loanAmount, interestRate, 12, loanDuration);
-        setTotalWithInterest(total);
+    const handleCalculateInterest = (num) => {
+        const total = calculateCompoundInterest(num, interestRate, 12, loanDuration);
+        setInterest(total);
     };
 
     const handleRequestLoan = async () => {
         setIsButtonDisabled(true);
         try {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
-            const interestRate = await getInterestRate(savingsBoxId);
             setInterestRate(interestRate);
-
-            const totalAmount = parseFloat(totalWithInterest);
-            const roundedTotalAmount = Math.round(totalAmount * 100) / 100;
-            await requestLoan(roundedTotalAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail, loanAmount)
+            const roundedTotalInterestAmount = Math.round(interest * 100) / 100;
+            await requestLoan(roundedTotalInterestAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail, loanAmount)
                 .catch(() => {
                     Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
                 });
@@ -120,8 +110,8 @@ const LoansPanel = () => {
     useEffect(() => {
         const fetchInterestRate = async () => {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
-            const interestRate = await getInterestRate(savingsBoxId);
-            setInterestRate(interestRate);
+            const theinterestRate = await getInterestRate(savingsBoxId);
+            setInterestRate(theinterestRate);
         };
 
         fetchInterestRate();
@@ -137,10 +127,11 @@ const LoansPanel = () => {
                         const num = parseFloat(text);
                         if (!isNaN(num)) {
                             setLoanAmount(num);
+                            handleCalculateInterest(num);
                         } else {
                             setLoanAmount(0);
+                            handleCalculateInterest(0);
                         }
-                        handleCalculateInterest();
                     }}
                     value={loanAmount.toString()}
                     keyboardType="numeric"
@@ -149,7 +140,7 @@ const LoansPanel = () => {
                 <Text style={styles.title2}>Seleccione el tiempo a tomar:</Text>
                 <Picker
                     selectedValue={loanDuration}
-                    onValueChange={(itemValue) => setLoanDuration(itemValue)}
+                    onValueChange={(itemValue) => {setLoanDuration(itemValue)}}
                 >
                     <Picker.Item label="3 meses" value="3" />
                     <Picker.Item label="6 meses" value="6" />
@@ -176,7 +167,7 @@ const LoansPanel = () => {
 
                 </Picker>
                 <Text style={styles.title2}>
-                    Total con interés: {totalWithInterest}
+                    Total con interés: {interest}
                 </Text>
                 <Button
                     title="Solicitar Prestamo"

@@ -5,7 +5,9 @@ import styles from '../styles/LoginStyle';
 import { firebase } from '@react-native-firebase/auth';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/RootStackParams';
+import firestore from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -26,13 +28,26 @@ const Login = ({ navigation }: Props) => {
       return;
     }
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
-      console.log(`Logged in as: ${email}`);
-      await AsyncStorage.setItem('userEmail', email);
-      navigation.navigate('Dashboard');
+      const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+      //await AsyncStorage.setItem('userEmail', email);
+      console.log("estoy aqui ");
+      const userId = userCredential.user.uid;
+      const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
+      console.log(userDetailsDoc.data());
+      console.log(userDetailsDoc.data().savingsBoxId);
+      if (userDetailsDoc.exists && userDetailsDoc.data().savingsBoxId) {
+        navigation.navigate('Dashboard');
+      } else {
+        navigation.navigate('JoinSavingsBox');
+      }
     } catch (error) {
       console.log(error);
-      Alert.alert("Credenciales incorrectas, intente de nuevo");
+      if (error instanceof ReferenceError && error.message.includes('firestore')) {
+        // If the error is specifically about 'firestore' not existing, navigate to JoinSavingsBox
+        navigation.navigate('JoinSavingsBox');
+      }else{
+        Alert.alert("Credenciales incorrectas, intente de nuevo");
+      }
     }
   };
 
@@ -62,8 +77,8 @@ const Login = ({ navigation }: Props) => {
         />
         <View style={styles.spacer} />
         <Button  title="Ingresar" onPress={handleLogin} />
-        <TouchableOpacity onPress={() => {}}>
-          <Text style={styles.forgotPassword}>Olvidé mi Contraseña</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('RegisterAdmin')}>
+          <Text style={styles.forgotPassword}>Soy un administrador</Text>
         </TouchableOpacity>
       </View>
     </View>

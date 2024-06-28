@@ -100,27 +100,6 @@ const Register = ({ navigation }: Props) => {
               value={password}
               onChangeText={setPassword}
             />
-          <Text style={styles.inputTitle}>Nuevo Grupo de ahorro</Text>
-          <View style={styles.switchContainer}>
-            <Switch
-              value={isNewBox}
-              onValueChange={setIsNewBox}
-              style={styles.switch}
-            />
-            <Text style={styles.label}>Estoy creando nuevo grupo de Ahorro?</Text>
-          </View>
-          {isNewBox ? (
-            <View>
-              <Text style={styles.inputTitle}>Nombre de la Caja de Ahorro</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nombre de la caja de Ahorro"
-                placeholderTextColor="#A69E9E"
-                value={savingsBoxName}
-                onChangeText={setSavingsBoxName}
-              />
-            </View>
-          ) : (
             <View>
               <Text style={styles.inputTitle}>ID de la Caja de Ahorro</Text>
               <TextInput
@@ -131,11 +110,10 @@ const Register = ({ navigation }: Props) => {
                 onChangeText={setSavingsBoxId}
               />
             </View>
-          )}
           <View style={styles.button}>
           <Button
         title="Registrarse"
-        disabled={!(savingsBoxId || savingsBoxName)}
+        disabled={!(savingsBoxId)}
         onPress={() => {
           firebase
           .auth()
@@ -145,62 +123,6 @@ const Register = ({ navigation }: Props) => {
               displayName: name,
             });
             const userId = userCredential.user.uid;
-
-            if (isNewBox) {
-              firestore()
-                .collection('savingsBoxes')
-                .doc(savingsBoxName)
-                .set({
-                  name: savingsBoxName,
-                  administrator: userId,
-                  members: [userId],
-                })
-                .then((docRef) => {
-                  console.log('New savings box created');
-                  firestore()
-                    .collection('userDetails')
-                    .doc(userId)
-                    .set({
-                      name: name,
-                      amountOwed: 0,
-                      amountTaken: 0,
-                      nextPaymentDate: null,
-                      pendingPayments: 0,
-                      sharesBoughtThisWeek: 0,
-                      totalInvestment: 0,
-                      savingsBoxId: savingsBoxName,
-                      isAdmin: true,
-                      isActive: true,
-                    })
-                    .catch((error) => {
-                      console.log('Error creating user details:', error);
-                    });
-                  firestore()
-                    .collection('userDetails')
-                    .doc(userId)
-                    .set({
-                      name: name,
-                      amountOwed: 0,
-                      amountTaken: 0,
-                      nextPaymentDate: null,
-                      pendingPayments: 0,
-                      sharesBoughtThisWeek: 0,
-                      totalInvestment: 0,
-                      savingsBoxId: savingsBoxName,
-                      isAdmin: true,
-                      isActive: true,
-                    })
-                    .then(() => {
-                      navigation.navigate('RegisterOrg', { userId });
-                    })
-                    .catch((error) => {
-                      console.log(error);
-                    });
-                })
-                .catch((error) => {
-                  console.log('Error creating new savings box:', error);
-                });
-            } else {// Arriba es como funciona el logeo caundo es una caja nueva y abajo cuando es una caja existente
               if (savingsBoxId) {
                 firestore()
                   .collection('savingsBoxes')
@@ -257,11 +179,19 @@ const Register = ({ navigation }: Props) => {
               } else {
                 console.log('No savingsBoxId provided');
               }
-            }
             console.log('Usuario creado');
           })
           .catch((error) => {
-            console.log(error);
+            if (error.code === 'auth/email-already-in-use') {
+              Alert.alert('Error', 'Este correo ya esta en uso.', [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate('Login'),
+                },
+              ]);
+            } else {
+              console.log(error);
+            }
           });
       }}
     />

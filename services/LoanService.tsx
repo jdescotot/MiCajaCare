@@ -5,7 +5,7 @@ import auth from '@react-native-firebase/auth';
 import { Alert } from 'react-native';
 
 export const requestLoan = async (
-  loanAmount: number,
+  roundedTotalInterestAmount: number,
   setLoanModalVisible: (visible: boolean) => void,
   savingsBoxId: string,
   loanReason: string,
@@ -13,14 +13,14 @@ export const requestLoan = async (
   loanDetail: string,
   originalLoan: number,
 ) => {
-  console.log(`Enviando solicitud de préstamo para ${loanAmount}...`);
+  console.log(`Enviando solicitud de préstamo de ${originalLoan}...`);
     const user = auth().currentUser;
     if (user) {
       const userId = user.uid;
       const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
       if (userDetailsDoc.exists) {
         const userName = userDetailsDoc.data().name;
-        const cuotas = loanAmount / loanDuration;
+        const cuotas = (originalLoan + roundedTotalInterestAmount) / loanDuration;
 
         await firestore().runTransaction(async (transaction) => {
           const savingsBoxRef = firestore().collection('savingsBoxes').doc(savingsBoxId);
@@ -31,15 +31,16 @@ export const requestLoan = async (
           }
 
           const currentTotalInvestmentToAdd = savingsBoxDoc.data().totalInvestmentToAdd || 0;
-          const newTotalInvestmentToAdd = currentTotalInvestmentToAdd - loanAmount;
-          if (newTotalInvestmentToAdd < 0) {
-            console.log('No hay suficiente dinero en caja para cubrir el préstamo');
+          const newTotalInvestmentToAdd = currentTotalInvestmentToAdd - originalLoan;
+          if (newTotalInvestmentToAdd < 0 ) {
             Alert.alert('Solicitud requeire mas dinero del que hay disponible');
+          }else if(userDetailsDoc.data().isActive === false){
+            Alert.alert('Usuario inactivo');
           }else{
             await firestore().collection('loanRequests').add({
               userId,
               name: userName,
-              loanAmount,
+              originalLoan,
               loanReason,
               loanDuration,
               status: 'Pendiente',
@@ -47,7 +48,7 @@ export const requestLoan = async (
               loanDetail,
               cuotas,
               requestType: 'Solicitud de préstamo',
-              originalLoan,
+              roundedTotalInterestAmount,
             });
             Alert.alert('Solicitud enviada con Exito');
           }

@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     borderColor: 'white',
-    backgroundColor: 'white',
+    backgroundColor: 'lightgrey',
     borderWidth: 1,
     marginBottom: 16,
     paddingLeft: 8,
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   inputWhite: {
     height: 40,
     borderColor: 'black',
-    backgroundColor: 'white',
+    backgroundColor: 'lightgrey',
     borderWidth: 1,
     marginBottom: 16,
     paddingLeft: 8,

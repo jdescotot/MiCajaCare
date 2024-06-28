@@ -105,26 +105,26 @@ const RegisterOrg = ({ navigation, route }: Props) => {
                   TotalStocks,
                 })
                 .then(() => {
-                  console.log('Caja de ahorros actualizada');
+                  Alert.alert('Éxito', 'Caja de ahorros actualizada');
                   resolve();
                 })
                 .catch((error) => {
-                  console.log('Error al actualizar caja de ahorros:', error);
+                  Alert.alert('Error', 'Error al actualizar caja de ahorros: ' + error);
                   reject(error);
                 });
-              } else {
-                console.log('No se encontro caja de ahorros para este usuario');
-                reject('No savings box found');
-              }
-            });
-          } else {
-            console.log('No se encontro el id de la caja de ahorrros para este usuario');
-            reject('No savings box ID found');
-          }
-        })
-        .catch((error) => {
-          console.log('Error recuperando usuario:', error);
-          reject(error);
+                } else {
+                  Alert.alert('Error', 'No se encontró caja de ahorros para este usuario');
+                  reject('No savings box found');
+                }
+                })
+                } else {
+                  Alert.alert('Error', 'No se encontró el id de la caja de ahorros para este usuario');
+                  reject('No savings box ID found');
+                }
+                })
+                .catch((error) => {
+                  Alert.alert('Error', 'Error recuperando usuario: ' + error);
+                  reject(error);
         });
     });
   };

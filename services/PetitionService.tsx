@@ -3,6 +3,7 @@
 
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { Alert } from 'react-native';
 
 export const sendPetition = async (
   numShares: number,
@@ -15,7 +16,7 @@ export const sendPetition = async (
   if (user) {
     const userId = user.uid;
     const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
-    if (userDetailsDoc.exists) {
+    if (userDetailsDoc.exists && userDetailsDoc.data().isActive) {
       const name = userDetailsDoc.data().name;
       await firestore().collection('stockRequests').add({
         userId,
@@ -27,6 +28,7 @@ export const sendPetition = async (
       });
     } else {
       console.log('No se encontró el nombre de usuario en los detalles del usuario.');
+      Alert.alert('Usuario inactivo', 'No se puede realizar la petición.');
     }
   }
 

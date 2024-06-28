@@ -13,6 +13,8 @@ import Stockpanel from './screens/admin/StockPanel';
 import firebase from './firebaseConfig';
 import AddMoneyToSavingsBox from './screens/admin/AddMoneyToSavingsBox';
 import Pagar from './screens/admin/Pagar';
+import RegisterAdmin from './screens/RegisterAdmin';
+import JoinSavingsBox from './screens/JoinSavingsBox';
 
 const Stack = createStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -42,6 +44,7 @@ const App = () => {
         />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
+        <Stack.Screen name="RegisterAdmin" component={RegisterAdmin} />
         <Stack.Screen
           name="RegisterOrg"
           component={RegisterOrg}
@@ -53,6 +56,7 @@ const App = () => {
         <Stack.Screen name="StockPanel" component={Stockpanel} />
         <Stack.Screen name="AddMoneyToSavingsBox" component={AddMoneyToSavingsBox} />
         <Stack.Screen name="Pagar" component={Pagar} />
+        <Stack.Screen name="JoinSavingsBox" component={JoinSavingsBox} />
       </Stack.Navigator>
     </NavigationContainer>
   );
