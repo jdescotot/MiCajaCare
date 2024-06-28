@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { addPaymentToTotalInvestment } from '../../services/PaymentService';
 
 const Pagar = () => {
   const [amount, setAmount] = useState('');
@@ -20,7 +21,7 @@ const Pagar = () => {
         value={amount}
         onChangeText={setAmount}
         keyboardType="numeric"
-        placeholder="Enter amount to pay"
+        placeholder="Eingrese el monto a pagar"
       />
       <Button
         title="Submit Payment"

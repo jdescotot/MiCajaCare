@@ -5,8 +5,8 @@ import styles from '../styles/LoginStyle';
 import { firebase } from '@react-native-firebase/auth';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/RootStackParams';
-import firestore from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 
 type LoginScreenNavigationProp = StackNavigationProp<
@@ -29,8 +29,8 @@ const Login = ({ navigation }: Props) => {
     }
     try {
       const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-      //await AsyncStorage.setItem('userEmail', email);
-      console.log("estoy aqui ");
+      await AsyncStorage.setItem('userEmail', email);
+      console.log(email, password);
       const userId = userCredential.user.uid;
       const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
       console.log(userDetailsDoc.data());
@@ -42,11 +42,14 @@ const Login = ({ navigation }: Props) => {
       }
     } catch (error) {
       console.log(error);
-      if (error instanceof ReferenceError && error.message.includes('firestore')) {
-        // If the error is specifically about 'firestore' not existing, navigate to JoinSavingsBox
-        navigation.navigate('JoinSavingsBox');
-      }else{
-        Alert.alert("Credenciales incorrectas, intente de nuevo");
+      if (error.code === 'auth/wrong-password') {
+        Alert.alert("Contraseña incorrecta, intente de nuevo");
+      } else if (error.code === 'auth/user-not-found') {
+        Alert.alert("Usuario no encontrado, verifique el correo electrónico");
+      } else if (error.code === 'auth/network-request-failed') {
+        Alert.alert("Error de red, verifique su conexión a internet");
+      } else {
+        Alert.alert("Error al iniciar sesión, intente de nuevo");
       }
     }
   };

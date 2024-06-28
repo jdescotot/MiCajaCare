@@ -52,7 +52,7 @@ const AddMoneyToSavingsBox = () => {
   }, []);
 
   const handleAddMoney = async () => {
-    if (!amountToAdd || !eventExplanation) { // Check if eventExplanation is provided
+    if (!amountToAdd || !eventExplanation) { 
       Alert.alert('Error', 'Favor complete todos los campos.');
       return;
     }
@@ -73,7 +73,7 @@ const AddMoneyToSavingsBox = () => {
       }
 
       const updatedTotalInvestmentToAdd = (savingsBoxData.totalInvestmentToAdd || 0) + amount;
-      await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd });
+      await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd, gananciaDeCaja: updatedTotalInvestmentToAdd + savingsBoxData.gananciaDeCaja });
 
       await firestore().collection('loanRequests').add({
         savingsBoxId: savingsBoxId,

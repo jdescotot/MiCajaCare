@@ -83,6 +83,8 @@ const Dashboard = () => {
                     sharesBoughtThisWeek: userDetails.sharesBoughtThisWeek || 0,
                     totalInvestment: userDetails.totalInvestment || 0,
                     TotalStocks: savingsBoxData.TotalStocks || 0,
+                    nextPayment: userDetails.nextPayment || 0,
+                    gananciaDeCaja: savingsBoxData.gananciaDeCaja || 0,
                 });
 
                 if ((savingsBoxData.loanInterestRate === 0 || savingsBoxData.loanInterestRate == null || savingsBoxData.latePaymentInterestRate === 0 || savingsBoxData.actionPrice === null || savingsBoxData.latePaymentInterestRate === null) && isAdmin) {
@@ -268,9 +270,10 @@ const handleReject = async (id, requestType) => {
                 { title: 'Pagos pendientes', value: data.pendingPayments },
                 { title: 'Solicitudes pendientes', value: pendingRequests.length },
                 { title: 'Acciones compradas por usuario', value: data.sharesBoughtThisWeek },
-                { title: 'Cantidad a Pagar', value: Math.round((data.amountTaken / data.pendingPayments) * 100) / 100 },
+                { title: 'Cantidad a Pagar', value: Math.round((data.nextPayment) * 100) / 100 },
                 { title: 'Inversión total', value: data.totalInvestment },
-                { title: 'Acciones totales', value: data.TotalStocks}
+                { title: 'Acciones totales', value: data.TotalStocks},
+                { title: 'Ganancia de Caja', value: Math.round((data.gananciaDeCaja) * 100) / 100},
             ],
             renderItem: ({ item }) => (
                 <View>
