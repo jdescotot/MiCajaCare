@@ -77,7 +77,7 @@ const LoansPanel = () => {
 
     const calculateCompoundInterest = (principal, rate, timesCompounded, time) => {
         const timeInYears = time / 12;
-        const decimalRate = rate / 100;
+        const decimalRate = rate / 10;
         console.log("la prueba es de ",Math.pow((1 + decimalRate / timesCompounded), timesCompounded * timeInYears),principal);
         const amount = principal * (Math.pow((1 + decimalRate / timesCompounded), timesCompounded * timeInYears));
         return amount.toFixed(6);
