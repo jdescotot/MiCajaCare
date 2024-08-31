@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, Alert, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import styles from '../styles/LoginStyle';
 import { firebase } from '@react-native-firebase/auth';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,12 +21,15 @@ type Props = {
 const Login = ({ navigation }: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
 
   const handleLogin = async () => {
     if (email === '' || password === '') {
       Alert.alert("Dejó espacios en blanco");
       return;
     }
+
     try {
       const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
       await AsyncStorage.setItem('userEmail', email);
@@ -51,6 +54,15 @@ const Login = ({ navigation }: Props) => {
       } else {
         Alert.alert("Error al iniciar sesión, intente de nuevo");
       }
+    }
+  };
+
+  const handleAdminAccess = () => {
+    if (adminPassword.toLowerCase() === 'carehn') {
+      setModalVisible(false);
+      navigation.navigate('AdminPanel');
+    } else {
+      Alert.alert("Contraseña incorrecta");
     }
   };
 
@@ -83,7 +95,42 @@ const Login = ({ navigation }: Props) => {
         <TouchableOpacity onPress={() => navigation.navigate('RegisterAdmin')}>
           <Text style={styles.forgotPassword}>Soy un administrador</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Text style={styles.forgotPassword}>Ir al panel de care</Text>
+        </TouchableOpacity>
       </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <ScrollView contentContainerStyle={styles.modalScroll}>
+              <Text style={styles.modalTitle}>Ingrese la contraseña de administrador</Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={setAdminPassword}
+                value={adminPassword}
+                placeholder="Contraseña"
+                placeholderTextColor="#A69E9E"
+                secureTextEntry={true}
+              />
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.modalButton} onPress={handleAdminAccess}>
+                  <Text style={styles.buttonText}>Aceptar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.buttonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

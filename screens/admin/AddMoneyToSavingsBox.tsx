@@ -3,21 +3,23 @@
 // Updated AddMoneyToSavingsBox.tsx to use the savings box ID retrieval method similar to LoansPanel.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Alert, Text } from 'react-native';
+import { View, TextInput, Alert, Text, TouchableOpacity } from 'react-native';
 import { updateSavingsBox } from '../../services/SavingsBoxService';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import styles from '../../styles/PanelStyle';
 import { useNavigation }  from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 
 const AddMoneyToSavingsBox = () => {
   const [savingsBoxId, setSavingsBoxId] = useState('');
   const [amountToAdd, setAmountToAdd] = useState('');
-  const [eventExplanation, setEventExplanation] = useState(''); // State for event explanation
+  const [eventExplanation, setEventExplanation] = useState('');
   
   const navigation = useNavigation();
+  
   useEffect(() => {
-    navigation.setOptions({ title: 'Ganancias por Eventos' }); // Cambia el título aquí
+    navigation.setOptions({ title: 'Ganancias por Eventos' });
   }, [navigation]);
 
   const getCurrentUserSavingsBoxId = async () => {
@@ -44,7 +46,7 @@ const AddMoneyToSavingsBox = () => {
         setSavingsBoxId(id);
       } catch (error) {
         console.error(error);
-        Alert.alert('Error', 'No se encontro el Id de la caja de ahorros.');
+        Alert.alert('Error', 'No se encontró el ID de la caja de ahorros.');
       }
     };
 
@@ -52,14 +54,14 @@ const AddMoneyToSavingsBox = () => {
   }, []);
 
   const handleAddMoney = async () => {
-    if (!amountToAdd || !eventExplanation) { 
+    if (!amountToAdd || !eventExplanation) {
       Alert.alert('Error', 'Favor complete todos los campos.');
       return;
     }
 
     const amount = parseFloat(amountToAdd);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Error', 'Monto no valido.');
+      Alert.alert('Error', 'Monto no válido.');
       return;
     }
 
@@ -68,12 +70,13 @@ const AddMoneyToSavingsBox = () => {
       const savingsBoxData = savingsBoxDoc.data();
 
       if (!savingsBoxData) {
-        Alert.alert('Error', 'No se encontro grupo de ahorro.');
+        Alert.alert('Error', 'No se encontró grupo de ahorro.');
         return;
       }
 
       const updatedTotalInvestmentToAdd = (savingsBoxData.totalInvestmentToAdd || 0) + amount;
-      await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd, gananciaDeCaja: updatedTotalInvestmentToAdd + savingsBoxData.gananciaDeCaja });
+      const updatedGananciaDeCaja = (savingsBoxData.gananciaDeCaja || 0) + amount;
+      await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd, gananciaDeCaja: updatedGananciaDeCaja });
 
       await firestore().collection('loanRequests').add({
         savingsBoxId: savingsBoxId,
@@ -83,31 +86,35 @@ const AddMoneyToSavingsBox = () => {
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
 
-      Alert.alert('Exito', 'El dinero se agrego exitosamente.');
+      Alert.alert('Éxito', 'El dinero se agregó exitosamente.');
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Un error ocurrio al agregar el dinero.');
+      Alert.alert('Error', 'Un error ocurrió al agregar el dinero.');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Ganancias por Eventos</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Cantidad a agregar"
-        keyboardType="numeric"
-        value={amountToAdd}
-        onChangeText={setAmountToAdd}
-      />
-      <TextInput // Input for event explanation
-        style={styles.input}
-        placeholder="Explicación del evento"
-        value={eventExplanation}
-        onChangeText={setEventExplanation}
-      />
-      <Button title="Agregar ganancia monetaria" onPress={handleAddMoney} />
-    </View>
+    <LinearGradient colors={['#e36f1e', '#a1c4fd']} style={styles.gradientContainer}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Ganancias por Eventos</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Cantidad a agregar"
+          keyboardType="numeric"
+          value={amountToAdd}
+          onChangeText={setAmountToAdd}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Explicación del evento"
+          value={eventExplanation}
+          onChangeText={setEventExplanation}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleAddMoney}>
+          <Text style={styles.buttonText}>Agregar ganancia monetaria</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 };
 

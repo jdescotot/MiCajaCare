@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -77,6 +77,48 @@ const styles = StyleSheet.create({
     backgroundColor: '#AEC6CF',
     right: -80,
     top: 475,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+    height: '30%',
+  },
+  modalScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    marginTop: 20,
+    width: '100%',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+  },
+  modalButton: {
+    backgroundColor: '#e36f1e',
+    padding: 10,
+    borderRadius: 20,
+    marginHorizontal: 5,
+    flex: 1,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

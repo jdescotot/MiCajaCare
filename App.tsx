@@ -15,6 +15,7 @@ import AddMoneyToSavingsBox from './screens/admin/AddMoneyToSavingsBox';
 import Pagar from './screens/admin/Pagar';
 import RegisterAdmin from './screens/RegisterAdmin';
 import JoinSavingsBox from './screens/JoinSavingsBox';
+import AdminPanel from './screens/AdminPanel';
 
 const Stack = createStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -57,6 +58,7 @@ const App = () => {
         <Stack.Screen name="AddMoneyToSavingsBox" component={AddMoneyToSavingsBox} />
         <Stack.Screen name="Pagar" component={Pagar} />
         <Stack.Screen name="JoinSavingsBox" component={JoinSavingsBox} />
+        <Stack.Screen name="AdminPanel" component={AdminPanel} />
       </Stack.Navigator>
     </NavigationContainer>
   );

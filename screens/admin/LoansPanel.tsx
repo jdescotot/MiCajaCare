@@ -2,14 +2,13 @@
 // loanPanel.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TextInput, Modal, Dimensions} from 'react-native';
+import { View, Text, TextInput, Modal, Dimensions, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { requestLoan } from '../../services/LoanService';
 import styles from '../../styles/PanelStyle';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const getCurrentUserSavingsBoxId = async () => {
@@ -42,7 +41,7 @@ const LoansPanel = () => {
 
     const navigation = useNavigation();
     useEffect(() => {
-        navigation.setOptions({ title: 'Préstamos' }); // Cambia el título aquí
+        navigation.setOptions({ title: 'Préstamos' });
     }, [navigation]);
 
     const confirmLoanRequest = async () => {
@@ -118,9 +117,9 @@ const LoansPanel = () => {
     }, []);
 
     return (
-        <View style={styles.container}>
+        <View style={styles.gradientContainer}>
             <View style={styles.innerContainer}>
-                <Text style={styles.title}>Solicitar prestamo</Text>
+                <Text style={styles.title}>Solicitar préstamo</Text>
                 <Text style={styles.title2}>Ingrese la cantidad a tomar:</Text>
                 <TextInput
                     onChangeText={text => {
@@ -135,21 +134,24 @@ const LoansPanel = () => {
                     }}
                     value={loanAmount.toString()}
                     keyboardType="numeric"
-                    style={[styles.input, {textAlign: 'center', fontSize: 20}]}
+                    style={[styles.input, { textAlign: 'center', fontSize: 20, color: '#333' }]} // Asegura que el texto sea visible
+                    placeholderTextColor="#aaa"
                 />
                 <Text style={styles.title2}>Seleccione el tiempo a tomar:</Text>
                 <Picker
                     selectedValue={loanDuration}
                     onValueChange={(itemValue) => {setLoanDuration(itemValue)}}
+                    style={styles.picker}
                 >
                     <Picker.Item label="3 meses" value="3" />
                     <Picker.Item label="6 meses" value="6" />
                 </Picker>
                 <TextInput
-                    style={styles.inputWhite}
+                    style={[styles.inputWhite, { textAlignVertical: 'top', color: '#333' }]}
                     multiline
                     numberOfLines={4}
-                    placeholder="Especifique el motivo del prestamo"
+                    placeholder="Especifique el motivo del préstamo"
+                    placeholderTextColor="#aaa"
                     onChangeText={text => {
                         setLoanDetail(text);
                     }}
@@ -158,22 +160,24 @@ const LoansPanel = () => {
                 <Picker
                     selectedValue={loanCategory}
                     onValueChange={(itemValue) => setLoanCategory(itemValue)}
+                    style={styles.picker}
                 >
                     <Picker.Item label="Personal" value="personal" />
                     <Picker.Item label="Salud" value="salud" />
-                    <Picker.Item label="Educacion" value="educacion" />
+                    <Picker.Item label="Educación" value="educacion" />
                     <Picker.Item label="Negocio" value="negocio" />
                     <Picker.Item label="Otros" value="otros" />
-
                 </Picker>
                 <Text style={styles.title2}>
                     Total con interés: {interest}
                 </Text>
-                <Button
-                    title="Solicitar Prestamo"
+                <TouchableOpacity
                     onPress={handleRequestLoan}
                     disabled={loanDetail === '' || isButtonDisabled}
-                />
+                    style={[styles.button, isButtonDisabled && styles.buttonDisabled]}
+                >
+                    <Text style={styles.buttonText}>Solicitar Préstamo</Text>
+                </TouchableOpacity>
                 <Modal
                     animationType="slide"
                     transparent={true}
@@ -182,32 +186,31 @@ const LoansPanel = () => {
                         setConfirmModalVisible(!confirmModalVisible);
                     }}
                 >
-                    <View>
-                        <Text>Confirmar</Text>
-                        <Text>{`Monto: ${loanAmount}`}</Text>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Confirmar</Text>
+                        <Text style={styles.modalText}>{`Monto: ${loanAmount}`}</Text>
                         <TextInput
-                            placeholder="Ingrese el motivo del prestamo"
+                            placeholder="Ingrese el motivo del préstamo"
                             onChangeText={text => setLoanReason(text)}
                             value={loanReason}
+                            style={styles.modalInput}
+                            placeholderTextColor="#aaa"
                         />
-                        <Text>{`Defina el teimpo del prestamo: ${loanDuration} Meses`}</Text>
+                        <Text style={styles.modalText}>{`Defina el tiempo del préstamo: ${loanDuration} Meses`}</Text>
                         <Slider
-                            style={{width: windowWidth - 40, height: 70}}
+                            style={styles.slider}
                             minimumValue={3}
                             maximumValue={6}
                             step={3}
                             onValueChange={value => setLoanDuration(value)}
                             value={loanDuration}
                         />
-                        <Button
-                            title="Confirmar"
-                            onPress={confirmLoanRequest}
-                        />
-                        <Button
-                            title="Cancelar"
-                            color="red"
-                            onPress={() => setConfirmModalVisible(false)}
-                        />
+                        <TouchableOpacity style={styles.modalButton} onPress={confirmLoanRequest}>
+                            <Text style={styles.buttonText}>Confirmar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setConfirmModalVisible(false)}>
+                            <Text style={styles.buttonText}>Cancelar</Text>
+                        </TouchableOpacity>
                     </View>
                 </Modal>
             </View>

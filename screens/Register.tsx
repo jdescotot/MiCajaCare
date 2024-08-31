@@ -2,6 +2,7 @@
 // Register.tsx
 import React, {useState, useEffect} from 'react';
 import {ScrollView, View, Text, TextInput, Button, Switch, KeyboardAvoidingView, Platform, BackHandler, ToastAndroid, Alert} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 import styles from '../styles/RegisterStyle';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,6 +10,7 @@ import { RootStackParamList } from '../types/RootStackParams';
 import { firebase } from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { requestJoinSavingsBox } from '../services/PetitionService';
+import { registerUser } from '../services/RegisterUser';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -28,7 +30,8 @@ const Register = ({ navigation }: Props) => {
   const [isNewBox, setIsNewBox] = useState(false);
   const [doubleBackToExitPressedOnce, setDoubleBackToExitPressedOnce] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [savingsBoxes, setSavingsBoxes] = useState([]);
+  const [sex, setSex] = useState('');
 
   useEffect(() => {
     const backAction = () => {
@@ -50,12 +53,14 @@ const Register = ({ navigation }: Props) => {
 
     return () => backHandler.remove();
   }, [doubleBackToExitPressedOnce]);
+
   useEffect(() => {
     const fetchSavingsBoxes = async () => {
       try {
         const snapshot = await firestore().collection('savingsBoxes').get();
-        const savingsBoxes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log(savingsBoxes);
+        const fetchedSavingsBoxes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSavingsBoxes(fetchedSavingsBoxes);
+        console.log(fetchedSavingsBoxes);
       } catch (error) {
         console.error('Error fetching savings boxes:', error);
       }
@@ -63,6 +68,15 @@ const Register = ({ navigation }: Props) => {
 
     fetchSavingsBoxes();
   }, []);
+
+  const handleRegister = () => {
+    const boxExists = savingsBoxes.some(box => box.id === savingsBoxId);
+    if (!boxExists) {
+      Alert.alert('Error', 'La caja de ahorro no existe.');
+      return;
+    }
+    registerUser(email, password, name, savingsBoxId, navigation, setModalVisible);
+  };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
@@ -100,6 +114,19 @@ const Register = ({ navigation }: Props) => {
               value={password}
               onChangeText={setPassword}
             />
+
+            <Text style={styles.inputTitle}>Sexo</Text>
+            <Picker
+              selectedValue={sex}
+              style={styles.input}
+              onValueChange={(itemValue) => setSex(itemValue)}
+            >
+              <Picker.Item label="Seleccione su sexo" value="" />
+              <Picker.Item label="Masculino" value="male" />
+              <Picker.Item label="Femenino" value="female" />
+              <Picker.Item label="Otro" value="other" />
+            </Picker>
+
             <View>
               <Text style={styles.inputTitle}>ID de la Caja de Ahorro</Text>
               <TextInput
@@ -107,94 +134,15 @@ const Register = ({ navigation }: Props) => {
                 placeholder="ID de la caja de Ahorro"
                 placeholderTextColor="#A69E9E"
                 value={savingsBoxId}
-                onChangeText={setSavingsBoxId}
+                onChangeText={(text) => setSavingsBoxId(text.toLowerCase().replace(/\s+/g, ''))}
               />
             </View>
           <View style={styles.button}>
           <Button
-        title="Registrarse"
-        disabled={!(savingsBoxId)}
-        onPress={() => {
-          firebase
-          .auth()
-          .createUserWithEmailAndPassword(email, password)
-          .then((userCredential) => {
-            userCredential.user.updateProfile({
-              displayName: name,
-            });
-            const userId = userCredential.user.uid;
-              if (savingsBoxId) {
-                firestore()
-                  .collection('savingsBoxes')
-                  .doc(savingsBoxId)
-                  .get()
-                  .then((doc) => {
-                    if (doc.exists) {
-                      console.log(`Savings Box ID: ${doc.id}, Name: ${doc.data().name}`);
-                      firestore()
-                        .collection('savingsBoxes')
-                        .doc(savingsBoxId)
-                        .update({
-                          members: firestore.FieldValue.arrayUnion(userId),
-                        })
-                        .then(() => {
-                          console.log('User added to the existing savings box');
-                          firestore()
-                            .collection('userDetails')
-                            .doc(userId)
-                            .set({
-                              name: name,
-                              amountOwed: 0,
-                              amountTaken: 0,
-                              nextPaymentDate: null,
-                              pendingPayments: 0,
-                              sharesBoughtThisWeek: 0,
-                              totalInvestment: 0,
-                              savingsBoxId: savingsBoxId,
-                              isAdmin: false,
-                              isActive: false,
-                            })
-                            .then(() => {
-                              requestJoinSavingsBox(userId, savingsBoxId, name, setModalVisible)
-                                .then(() => {
-                                  console.log('Request to join savings box created');
-                                  navigation.navigate('Dashboard');
-                                })
-                                .catch((error) => {
-                                  console.error('Error creating request to join savings group:', error);
-                                });
-                            })
-                            .catch((error) => {
-                              console.log('Error creating user details:', error);
-                            });
-                        })
-                        .catch((error) => {
-                          console.log('Error adding user to savings box', error);
-                        });
-                    } else {
-                      console.log('No hay una caja de Ahorro con ese nombre');
-                      Alert.alert('No hay una caja de Ahorro con ese nombre');
-                    }
-                  });
-              } else {
-                console.log('No savingsBoxId provided');
-              }
-            console.log('Usuario creado');
-          })
-          .catch((error) => {
-            if (error.code === 'auth/email-already-in-use') {
-              Alert.alert('Error', 'Este correo ya esta en uso.', [
-                {
-                  text: "OK",
-                  onPress: () => navigation.navigate('Login'),
-                },
-              ]);
-            } else {
-              console.log(error);
-            }
-          });
-      }}
-    />
+              title="Registrarse"
+              disabled={!(savingsBoxId)}
+              onPress={handleRegister}
+            />
         </View>
       </View>
     </ScrollView>

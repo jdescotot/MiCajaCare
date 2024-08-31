@@ -8,32 +8,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 16,
-    backgroundColor: '#e36f1e',
+    backgroundColor: '#FF6F00',
   },
   title: {
-    fontSize: 64,
+    fontSize: 32,
     marginBottom: 26,
-    color: '#f9f9f9',
+    color: '#FFFFFF',
     textAlign: 'center',
+    fontWeight: 'bold',
   },
   inputTitle: {
     color: '#000',
-    marginBottom: 2,
+    marginBottom: 8,
     marginTop: 5,
+    fontSize: 16,
   },
   input: {
     height: 40,
-    borderColor: 'lightgrey',
-    backgroundColor: 'lightgrey',
+    borderColor: '#FFFFFF',
+    backgroundColor: '#FFA726',
     borderWidth: 1,
     paddingLeft: 8,
     marginBottom: 28,
     borderRadius: 20,
+    color: '#FFFFFF',
   },
   button: {
-    backgroundColor: '#f9f9f9',
-    padding: 5,
+    backgroundColor: '#FFFFFF',
+    padding: 10,
     marginBottom: 16,
+    borderRadius: 10,
   },
   switch: {
     marginBottom: 16,
@@ -41,7 +45,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'black',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   switchContainer: {
@@ -58,18 +62,19 @@ const styles = StyleSheet.create({
   },
   sliderText: {
     fontSize: 20,
+    color: '#FFFFFF', 
   },
   registerContainer: {
-    backgroundColor: 'white',
-    borderRadius: 40,
-    padding: 16,
+    backgroundColor: '#FB8C00',
+    borderRadius: 20,
+    padding: 20,
   },
   circle: {
     position: 'absolute',
     width: 400,
     height: 400,
     borderRadius: 500,
-    backgroundColor: '#FADADD',
+    backgroundColor: '#FFB74D',
     right: 150,
     top: 225,
   },
@@ -78,10 +83,11 @@ const styles = StyleSheet.create({
     width: 450,
     height: 450,
     borderRadius: 600,
-    backgroundColor: '#AEC6CF',
+    backgroundColor: '#FFD54F',
     right: -80,
     top: 475,
   },
 });
 
 export default styles;
+

@@ -14,4 +14,5 @@ export type RootStackParamList = {
     AddMoneyToSavingsBox: undefined;
     Pagar: undefined;
     JoinSavingsBox: undefined;
+    AdminPanel: undefined;
 };

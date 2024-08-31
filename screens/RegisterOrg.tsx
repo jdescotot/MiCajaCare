@@ -162,9 +162,9 @@ const RegisterOrg = ({ navigation, route }: Props) => {
   }, [startDate]);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }} >
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <Text style={styles.title}>Nueva  caja de Ahorros</Text>
+        <Text style={styles.title}>Nueva caja de Ahorros</Text>
         <View style={styles.registerContainer}>
           <Text style={styles.sliderText}>Precio de Acción</Text>
           <TextInput
@@ -201,17 +201,15 @@ const RegisterOrg = ({ navigation, route }: Props) => {
                 })
                 .catch((error) => {
                   console.error('Failed to update savings box:', error);
-                    Alert.alert(
-                      "Error",
-                      "No se pudo actualizar la caja de ahorros. Por favor, inténtelo de nuevo.", // Message to display
-                      [
-                        { text: "OK" },
-                      ]
-                    );
+                  Alert.alert(
+                    'Error',
+                    'No se pudo actualizar la caja de ahorros. Por favor, inténtelo de nuevo.',
+                    [{ text: 'OK' }]
+                  );
                 });
             }}
           />
-          <View style={{marginBottom: 50}}/>
+          <View style={{ marginBottom: 50 }} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

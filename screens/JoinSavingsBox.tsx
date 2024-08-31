@@ -43,7 +43,6 @@ const JoinSavingsBox = ({ navigation }) => {
                 isActive: false,
               });
               console.log('User details created/updated with savings box ID');
-              // Proceed with any additional steps, like sending a join request
               await requestJoinSavingsBox(userId, savingsBoxId, name, setModalVisible);
               console.log('Request to join savings box created');
               navigation.navigate('Dashboard');

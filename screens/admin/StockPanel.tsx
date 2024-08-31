@@ -1,13 +1,12 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect} from 'react';
-import { View, Text, Button, TextInput, Modal, Dimensions  } from 'react-native';
+import { View, Text, Button, TextInput, Modal, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { sendPetition } from '../../services/PetitionService';
-import styles from '../../styles/DashboardStyle';
+import styles from '../../styles/StockPanelStyle'; // Importa el nuevo archivo de estilos
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { Alert } from 'react-native';
 
 const getCurrentUserSavingsBoxId = async () => {
     const user = auth().currentUser;
@@ -87,6 +86,7 @@ const StockPanel = () => {
             <Text style={styles.listItem}>Solicitar acciones</Text>
             <Text style={styles.listItem}>Ingrese la cantidad a tomar:</Text>
             <TextInput
+                style={styles.input} // Aplica el estilo al TextInput
                 onChangeText={text => {
                     const num = parseFloat(text);
                     if (!isNaN(num)) {
@@ -99,17 +99,19 @@ const StockPanel = () => {
                 keyboardType="numeric"
             />
             <Slider
-                style={{width: windowWidth - 40, height: 70}}
+                style={styles.slider} // Aplica el estilo al Slider
                 minimumValue={1}
                 maximumValue={5}
                 step={1}
                 onValueChange={value => setStockAmount(value)}
                 value={stockAmount}
             />
-            <Button
-                title="Solicitar Acciones"
+            <TouchableOpacity
+                style={styles.button} // Aplica el estilo al botón
                 onPress={handleSendPetition}
-            />
+            >
+                <Text style={styles.buttonText}>Solicitar Acciones</Text>
+            </TouchableOpacity>
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -118,18 +120,23 @@ const StockPanel = () => {
                     setConfirmModalVisible(!confirmModalVisible);
                 }}
             >
-                <View>
-                    <Text>Confirmar solicitud de acciones</Text>
-                    <Text>{`Cantidad de acciones: ${stockAmount}`}</Text>
-                    <Button
-                        title="Confirmar"
-                        onPress={() => setConfirmModalVisible(false)}
-                    />
-                    <Button
-                        title="Cancelar"
-                        color="red"
-                        onPress={() => setConfirmModalVisible(false)}
-                    />
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.listItem}>Confirmar solicitud de acciones</Text>
+                        <Text style={styles.listItem}>{`Cantidad de acciones: ${stockAmount}`}</Text>
+                        <TouchableOpacity
+                            style={styles.modalButton}
+                            onPress={() => setConfirmModalVisible(false)}
+                        >
+                            <Text style={styles.modalButtonText}>Confirmar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.modalButtonCancel}
+                            onPress={() => setConfirmModalVisible(false)}
+                        >
+                            <Text style={styles.modalButtonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </Modal>
         </View>

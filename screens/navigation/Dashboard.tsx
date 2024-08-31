@@ -1,13 +1,14 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from "react";
-import { View, Text, Dimensions, TouchableOpacity, Button, RefreshControl, TextInput, SectionList, Alert } from "react-native";
+import { View, Text, Dimensions, TouchableOpacity, RefreshControl, TextInput, Alert, ScrollView } from "react-native";
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { checkIfAdmin } from '../../valisations/ValidacionesAdmin';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from '../../styles/DashboardStyle';
 import { handleAccept } from "../../handling/HandleAcept";
-
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
 const Dashboard = () => {
     const navigation = useNavigation();
     const [pendingRequests, setPendingRequests] = useState([]);
@@ -15,11 +16,13 @@ const Dashboard = () => {
     const [isActive, setIsActive] = useState(true);
     const [data, setData] = useState({});
     const [pastRequests, setPastRequests] = useState([]);
+    const [rejectionTexts, setRejectionTexts] = useState([]);
     const screenWidth = Dimensions.get('window').width;
     const fontSize = screenWidth * 0.06;
     const [refreshing, setRefreshing] = useState(false);
     const [liquidesDeCaja, setLiquidesDeCaja] = useState(0);
     const [buttonDisabled, setButtonDisabled] = useState(false);
+    const [savingsBoxName, setSavingsBoxName] = useState('');
 
     useEffect(() => {
         navigation.setOptions({ title: 'Inicio' });
@@ -41,49 +44,39 @@ const Dashboard = () => {
                 const userId = user.uid;
                 const userDoc = await firestore().collection('userDetails').doc(userId).get();
                 const userData = userDoc.data();
-                console.log('el id de usuario', userId);
 
                 if (!userData || !userData.savingsBoxId) {
                     throw new Error('Documento de usuario o caja de ahorro no valido o faltante');
                 }
 
                 const savingsBoxId = userData.savingsBoxId;
-                console.log('el id de la caja de ahorros', savingsBoxId);
-
                 const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
                 const savingsBoxData = savingsBoxDoc.data();
 
                 if (!savingsBoxData) {
                     Alert.alert('Error', 'No se encontró la caja de ahorros');
                     navigation.navigate('JoinSavingsBox');
-
+                    return;
                 }
 
-                const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
-                const userDetails = userDetailsDoc.data();
                 const totalInvestmentToAdd = savingsBoxData.totalInvestmentToAdd || 0;
+                const nombreCajaDeAhorro = savingsBoxData.name || 'Caja de ahorros';
+                setSavingsBoxName(nombreCajaDeAhorro);
                 setLiquidesDeCaja(totalInvestmentToAdd);
-                console.log('liquides de caja', liquidesDeCaja);
-
-                if (!userDetails) {
-                    throw new Error('Detalles de usuario no validos o faltantes');
-                }else{
-                    setIsActive(userDetails.isActive);
-                }
 
                 setData({
                     liquidesDeCaja: totalInvestmentToAdd,
                     actionPrice: savingsBoxData.actionPrice || 0,
                     loanInterestRate: savingsBoxData.loanInterestRate || 0,
                     latePaymentInterestRate: savingsBoxData.latePaymentInterestRate || 0,
-                    amountOwed: userDetails.amountOwed || 0,
-                    amountTaken: userDetails.amountTaken || 0,
-                    nextPaymentDate: userDetails.nextPaymentDate || 0,
-                    pendingPayments: userDetails.pendingPayments || 0,
-                    sharesBoughtThisWeek: userDetails.sharesBoughtThisWeek || 0,
-                    totalInvestment: userDetails.totalInvestment || 0,
+                    amountOwed: userData.amountOwed || 0,
+                    amountTaken: userData.amountTaken || 0,
+                    nextPaymentDate: userData.nextPaymentDate || 0,
+                    pendingPayments: userData.pendingPayments || 0,
+                    sharesBoughtThisWeek: userData.sharesBoughtThisWeek || 0,
+                    totalInvestment: userData.totalInvestment || 0,
                     TotalStocks: savingsBoxData.TotalStocks || 0,
-                    nextPayment: userDetails.nextPayment || 0,
+                    nextPayment: userData.nextPayment || 0,
                     gananciaDeCaja: savingsBoxData.gananciaDeCaja || 0,
                 });
 
@@ -190,36 +183,36 @@ const Dashboard = () => {
         setRefreshing(false);
     }, []);
 
-const handleReject = async (id, requestType) => {
-    console.log("Procesando Rechazo", id, requestType );
-    let collectionName = '';
+    const handleReject = async (id, requestType) => {
+        console.log("Procesando Rechazo", id, requestType );
+        let collectionName = '';
 
-    switch (requestType) {
-        case 'Solicitud de préstamo':
-            collectionName = 'loanRequests';
-            break;
-        case 'Compra de Acciones':
-            collectionName = 'stockRequests';
-            break;
-        case 'peticion de Acceso a caja de ahorro':
-            collectionName = 'savingsBoxJoinRequests';
-            break;
-        default:
-            console.error('Tipo de solicitud desconocido');
-            return;
-    }
+        switch (requestType) {
+            case 'Solicitud de préstamo':
+                collectionName = 'loanRequests';
+                break;
+            case 'Compra de Acciones':
+                collectionName = 'stockRequests';
+                break;
+            case 'peticion de Acceso a caja de ahorro':
+                collectionName = 'savingsBoxJoinRequests';
+                break;
+            default:
+                console.error('Tipo de solicitud desconocido');
+                return;
+        }
 
-    try {
-        await firestore().collection(collectionName).doc(id).update({
-            status: 'Rechazado',
-        });
-        Alert.alert("Solicitud rechazada con éxito");
-        await fetchPendingRequests();
-    } catch (error) {
-        console.error("Error al rechazar la solicitud:", error);
-        Alert.alert("Error al rechazar la solicitud");
-    }
-};
+        try {
+            await firestore().collection(collectionName).doc(id).update({
+                status: 'Rechazado',
+            });
+            Alert.alert("Solicitud rechazada con éxito");
+            await fetchPendingRequests();
+        } catch (error) {
+            console.error("Error al rechazar la solicitud:", error);
+            Alert.alert("Error al rechazar la solicitud");
+        }
+    };
 
     const fetchProximoPago = async () => {
         try {
@@ -256,6 +249,12 @@ const handleReject = async (id, requestType) => {
         }
     };
 
+    const handleRejectionTextChange = (text, index) => {
+        const newRejectionTexts = [...rejectionTexts];
+        newRejectionTexts[index] = text;
+        setRejectionTexts(newRejectionTexts);
+    };
+
     const sections = [
         {
             title: 'Vista General',
@@ -285,136 +284,150 @@ const handleReject = async (id, requestType) => {
         },
     ];
 
+    const actionsData = ['Solicitar préstamo', 'Comprar acciones'];
     if (isAdmin) {
-        sections.push({
-            title: 'Solicitudes Pendientes',
-            data: pendingRequests,
-            renderItem: ({ item, index }) => {
-                const [rejectionText, setRejectionText] = useState('');
-
-                return (
-                    <View style={styles.requestContainer} key={index}>
-                         <Text>{`Solicitante: ${item.userName}`}</Text>
-                         <Text>{`Tipo de solicitud: ${item.requestType}`}</Text>
-                        {item.loanAmount && <Text>{`Monto del préstamo: ${item.loanAmount}`}</Text>}
-                        {item.loanDetail && <Text>{`Detalle del préstamo: ${item.loanDetail}`}</Text>}
-                        {item.loanDuration && <Text>{`Duración del préstamo: ${item.loanDuration} meses`}</Text>}
-                        {item.loanReason && <Text>{`Razón del préstamo: ${item.loanReason}`}</Text>}
-                        {item.numShares && <Text>{`Número de acciones: ${item.numShares}`}</Text>}
-                        <TextInput
-                            style={styles.input}
-                            onChangeText={setRejectionText}
-                            value={rejectionText}
-                            placeholder="Razón del rechazo"
-                        />
-                        <View style={styles.buttonContainer}>
-                            <Button
-                                title="Aceptar"
-                                onPress={() => {
-                                    setButtonDisabled(true);
-                                    handleAccept(item.id, item.requestType);
-                                    onRefresh();
-                                }}
-                                style={styles.requestButton}
-                                disabled={buttonDisabled}
-                            />
-                            <Button 
-                                title="Rechazar"
-                                onPress={() => handleReject(item.id, item.requestType)}
-                                style={styles.requestButton}
-                                disabled={!rejectionText.trim()}
-                            />
-                        </View>
-                    </View>
-                );
-            },
-            keyExtractor: (item, index) => index.toString(),
-        });
+        actionsData.push('Eventos');
     }
-
-    if (pastRequests.length > 0) {
-        sections.push({
-            title: 'Solicitudes Pasadas',
-            data: pastRequests,
-            renderItem: ({ item, index }) => (
-                <View style={styles.requestContainer} key={index}>
-                    <Text>{`Solicitud ${index + 1}: ${item.name}`}</Text>
-                    <Text>{`Tipo de solicitud: ${item.requestType}`}</Text>
-                    <Text>{`Estado: ${item.status}`}</Text>
-                    {item.response && <Text>{`Respuesta: ${item.response}`}</Text>}
-                </View>
-            ),
-            keyExtractor: (item, index) => index.toString(),
-        });
-    }
-
-const actionsData = ['Solicitar préstamo', 'Comprar acciones'];
-if (isAdmin) {
-    actionsData.push('Eventos');
-}
-
-sections.push({
-    title: 'Acciones a realizar',
-    data: actionsData,
-    renderItem: ({ item }) => (
-        <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-                if (item === 'Solicitar préstamo') {
-                    navigation.navigate('LoansPanel');
-                } else if (item === 'Comprar acciones') {
-                    navigation.navigate('StockPanel');
-                } else if (item === 'Eventos' && isAdmin) {
-                    navigation.navigate('AddMoneyToSavingsBox');
-                } else if (item === 'Pagar') {
-                    navigation.navigate('Pagar');
-                }
-            }}
-        >
-            <Text style={styles.buttonText}>{item}</Text>
-        </TouchableOpacity>
-    ),
-    keyExtractor: (item) => item,
-});
-
-    useEffect(() => {
-        fetchData();
-        fetchProximoPago();
-    }, []);
-
-    useEffect(() => {
-        if (data.actionPrice === 0 || data.actionPrice === null) {
-            navigation.navigate('RegisterOrg', { userId: auth().currentUser.uid });
-        }
-    }, [data.actionPrice]);
 
     return (
-        <View style={styles.container}>
-            <View style={styles.containertwo}>
-                <SectionList
-                    style={styles.container}
-                    sections={sections}
-                    renderSectionHeader={({ section: { title } }) => (
-                        <View style={styles.headerRow}>
-                            <Text style={styles.headerText}>{title}</Text>
-                        </View>
-                    )}
-                    renderItem={({ item, index }) => (
-                        <View style={index % 2 === 0 ? styles.rowEven : styles.rowOdd}>
-                            <Text style={styles.cell}>{item.title}</Text>
-                            <Text style={styles.cell}>{item.value}</Text>
-                        </View>
-                    )}
-                    keyExtractor={(item, index) => item + index}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                        />
-                    }
+        <ScrollView
+            style={styles.mainContainer}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor="#4caf50"
+                    colors={['#4caf50']}
+                    progressBackgroundColor="#ffffff"
                 />
+            }
+        >
+            <View style={styles.jumbotron}>
+                <Text style={styles.jumbotronText}>{savingsBoxName}</Text>
+                <View style={styles.liquidesContainer}>
+                    <Text style={styles.liquidesText}>{`Liquides de Caja: $${Math.round(data.liquidesDeCaja * 100) / 100}`}</Text>
+                </View>
             </View>
-        </View>
+
+            <View style={styles.cardContainer}>
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Precio de la Acción</Text>
+                    <Text style={styles.cardValue}>{`$${Math.round(data.actionPrice * 100) / 100}`}</Text>
+                </View>
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Acciones Totales</Text>
+                    <Text style={styles.cardValue}>{`${data.TotalStocks}`}</Text>
+                </View>
+            </View>
+
+            <View style={styles.amountOwedContainer}>
+                <Text style={styles.amountOwedText}>{`Cantidad Adeudada: $${Math.round(data.amountOwed * 100) / 100}`}</Text>
+            </View>
+
+            {/* Aquí se definen las tarjetas de los detalles con íconos */}
+            {[
+                { title: 'Cantidad tomada', value: data.amountTaken, icon: 'cash' },
+                { title: 'Tasa de interés por pago atrasado', value: `${data.latePaymentInterestRate}%`, icon: 'percent' },
+                { title: 'Tasa de interés del préstamo', value: `${data.loanInterestRate}%`, icon: 'finance' },
+                { title: 'Fecha del próximo pago', value: data.nextPaymentDate, icon: 'calendar' },
+                { title: 'Pagos pendientes', value: data.pendingPayments, icon: 'alert' },
+                { title: 'Inversión total', value: data.totalInvestment, icon: 'bank' },
+                { title: 'Ganancia de Caja', value: data.gananciaDeCaja, icon: 'trending-up' },
+            ].map((item, index) => (
+                <View style={styles.detailContainer} key={index}>
+                    <Icon name={item.icon} size={40} color="#4caf50" style={styles.detailIcon} />
+                    <View style={styles.detailTextContainer}>
+                        <Text style={styles.detailTitle}>{item.title}</Text>
+                        <Text style={styles.detailValue}>{item.value}</Text>
+                    </View>
+                </View>
+            ))}
+
+            {/* Sección de solicitudes pendientes */}
+            {isAdmin && pendingRequests.length > 0 && (
+                <View>
+                    <Text style={styles.jumbotronText}>Solicitudes Pendientes</Text>
+                    {pendingRequests.map((item, index) => (
+                        <View style={styles.requestCard} key={index}>
+                            <View style={styles.requestDetails}>
+                                <Text style={styles.requestText}>{`Solicitante: ${item.userName}`}</Text>
+                                <Text style={styles.requestType}>{`Tipo: ${item.requestType}`}</Text>
+                                {item.loanAmount && (
+                                    <Text style={styles.requestAmount}>{`Monto: $${item.loanAmount}`}</Text>
+                                )}
+                                <Text style={styles.requestStatus}>{`Estado: ${item.status}`}</Text>
+                            </View>
+                            <View>
+                                <TextInput
+                                    style={styles.rejectReasonInput}
+                                    onChangeText={(text) => handleRejectionTextChange(text, index)}
+                                    value={rejectionTexts[index] || ''}
+                                    placeholder="Razón del rechazo"
+                                />
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setButtonDisabled(true);
+                                            handleAccept(item.id, item.requestType);
+                                            onRefresh();
+                                        }}
+                                        style={styles.button}
+                                        disabled={buttonDisabled}
+                                    >
+                                        <Text style={styles.buttonText}>Aceptar</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => handleReject(item.id, item.requestType)}
+                                        style={styles.button}
+                                        disabled={!rejectionTexts[index]?.trim()}
+                                    >
+                                        <Text style={styles.buttonText}>Rechazar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+            )}
+
+            {/* Sección de botones para acciones */}
+            <View style={styles.buttonContainer}>
+                {actionsData.map((action, index) => (
+                    <TouchableOpacity
+                        key={index}
+                        style={styles.button}
+                        onPress={() => {
+                            if (action === 'Solicitar préstamo') {
+                                navigation.navigate('LoansPanel');
+                            } else if (action === 'Comprar acciones') {
+                                navigation.navigate('StockPanel');
+                            } else if (action === 'Eventos' && isAdmin) {
+                                navigation.navigate('AddMoneyToSavingsBox');
+                            }
+                        }}
+                    >
+                        <Text style={styles.buttonText}>{action}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Sección de solicitudes pasadas */}
+            {pastRequests.length > 0 && (
+                <View>
+                    <Text style={styles.jumbotronText}>Solicitudes Pasadas</Text>
+                    {pastRequests.map((item, index) => (
+                        <View style={styles.pastRequestContainer} key={index}>
+                            <Text style={styles.requestTitle}>{`Solicitud ${index + 1}: ${item.name}`}</Text>
+                            <Text style={styles.requestDetails}>{`Tipo de solicitud: ${item.requestType}`}</Text>
+                            <Text style={styles.requestDetails}>{`Estado: ${item.status}`}</Text>
+                            {item.response && <Text style={styles.requestDetails}>{`Respuesta: ${item.response}`}</Text>}
+                        </View>
+                    ))}
+                </View>
+            )}
+
+        </ScrollView>
     );
 };
 
