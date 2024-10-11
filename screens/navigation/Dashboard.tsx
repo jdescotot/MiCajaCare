@@ -332,14 +332,14 @@ const Dashboard = () => {
             <View style={styles.jumbotron}>
                 <Text style={styles.jumbotronText}>{savingsBoxName}</Text>
                 <View style={styles.liquidesContainer}>
-                    <Text style={styles.liquidesText}>{`Liquides de Caja: $${Math.round(data.liquidesDeCaja * 100) / 100}`}</Text>
+                    <Text style={styles.liquidesText}>{`Liquides de Caja: L${Math.round(data.liquidesDeCaja * 100) / 100}`}</Text>
                 </View>
             </View>
 
             <View style={styles.cardContainer}>
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Precio de la Acción</Text>
-                    <Text style={styles.cardValue}>{`$${Math.round(data.actionPrice * 100) / 100}`}</Text>
+                    <Text style={styles.cardValue}>{`L${Math.round(data.actionPrice * 100) / 100}`}</Text>
                 </View>
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>Acciones Totales</Text>
@@ -348,7 +348,7 @@ const Dashboard = () => {
             </View>
 
             <View style={styles.amountOwedContainer}>
-                <Text style={styles.amountOwedText}>{`Cantidad Adeudada: $${Math.round(data.amountOwed * 100) / 100}`}</Text>
+                <Text style={styles.amountOwedText}>{`Cantidad Adeudada: L${Math.round(data.amountOwed * 100) / 100}`}</Text>
             </View>
 
             {/* Aquí se definen las tarjetas de los detalles con íconos */}
@@ -381,7 +381,7 @@ const Dashboard = () => {
                         <Text style={styles.requestText}>{`Solicitante: ${item.userName}`}</Text>
                         <Text style={styles.requestType}>{`Tipo: ${item.requestType}`}</Text>
                         {item.loanAmount && (
-                            <Text style={styles.requestAmount}>{`Monto: $${item.loanAmount}`}</Text>
+                            <Text style={styles.requestAmount}>{`Monto: L${item.loanAmount}`}</Text>
                         )}
                         <Text style={styles.requestStatus}>{`Estado: ${item.status}`}</Text>
                         </View>

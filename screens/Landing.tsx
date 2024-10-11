@@ -19,7 +19,7 @@ const Landing = ({ navigation }: Props) => {
     <View style={styles.container}>
             <View style={styles.circleTwo}/>
             <View style={styles.circle}/>
-      <Text style={styles.title}>Bienvenido!</Text>
+      <Text style={styles.title}>Mi Caja Care</Text>
       <View style={styles.secondContainer}>
         <View style={styles.button}>
           <Button

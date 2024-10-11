@@ -140,7 +140,6 @@ const LoansPanel = () => {
                     style={styles.picker}
                 >
                     <Picker.Item label="3 meses" value={3} />
-                    <Picker.Item label="6 meses" value={6} />
                 </Picker>
                 <TextInput
                     style={[styles.inputWhite, { textAlignVertical: 'top', color: '#333' }]}
