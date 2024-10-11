@@ -3,28 +3,43 @@ import { StyleSheet } from 'react-native';
 export default StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    innerContainer: {
+        width: '100%',
+        backgroundColor: '#FFFFFF',
         padding: 20,
-        backgroundColor: '#FFFFFF', // Fondo blanco para un look más limpio
+        borderRadius: 10,
+        elevation: 3,
     },
-    listItem: {
+    title: {
+        fontSize: 20,
+        color: '#333333',
+        marginBottom: 20,
+        textAlign: 'center',
+        fontWeight: 'bold',
+    },
+    label: {
         fontSize: 16,
-        color: '#333333', // Un color oscuro pero suave para el texto
-        marginVertical: 10,
+        color: '#333333',
+        marginBottom: 10,
     },
-    input: {
+    pickerContainer: {
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        padding: 10,
         borderRadius: 8,
-        backgroundColor: '#F9F9F9', // Fondo claro para el input
-        marginVertical: 10,
+        backgroundColor: '#F9F9F9',
+        marginBottom: 20,
     },
-    slider: {
+    picker: {
         width: '100%',
-        marginVertical: 20,
+        height: 50,
     },
     button: {
-        backgroundColor: '#FF5722', // Color fuerte y destacado para los botones
+        backgroundColor: '#FF5722',
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
@@ -46,6 +61,17 @@ export default StyleSheet.create({
         borderRadius: 10,
         width: '80%',
         alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 18,
+        color: '#333333',
+        marginBottom: 10,
+        fontWeight: 'bold',
+    },
+    modalText: {
+        fontSize: 16,
+        color: '#333333',
+        marginBottom: 20,
     },
     modalButton: {
         marginTop: 20,

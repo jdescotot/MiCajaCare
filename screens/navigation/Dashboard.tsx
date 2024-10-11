@@ -129,9 +129,9 @@ const Dashboard = () => {
             const userDetailsDoc = await firestore().collection('userDetails').doc(userId).get();
             const userDetails = userDetailsDoc.data();
             if (!userDetails || !userDetails.savingsBoxId) throw new Error('User details or savings box ID missing');
-
+    
             const savingsBoxId = userDetails.savingsBoxId;
-
+    
             const loanRequestsPromise = firestore().collection('loanRequests')
                 .where('savingsBoxId', '==', savingsBoxId)
                 .where('status', '==', 'Pendiente')
@@ -144,11 +144,36 @@ const Dashboard = () => {
                 .where('savingsBoxId', '==', savingsBoxId)
                 .where('status', '==', 'Pendiente')
                 .get();
-
+    
             const [loanRequestsSnapshot, stockRequestsSnapshot, savingsBoxJoinRequestsSnapshot] = await Promise.all([loanRequestsPromise, stockRequestsPromise, savingsBoxJoinRequestsPromise]);
-
-            const loanRequests = loanRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const stockRequests = stockRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+            // Modificar loanRequests para incluir userName
+            const loanRequests = await Promise.all(loanRequestsSnapshot.docs.map(async doc => {
+                const request = doc.data();
+                const userDetailsDoc = await firestore().collection('userDetails').doc(request.userId).get();
+                const userName = userDetailsDoc.data()?.name || 'Unknown';
+                return {
+                    id: doc.id,
+                    ...request,
+                    requestType: 'Solicitud de préstamo',
+                    userName: userName,
+                };
+            }));
+    
+            // Modificar stockRequests para incluir userName
+            const stockRequests = await Promise.all(stockRequestsSnapshot.docs.map(async doc => {
+                const request = doc.data();
+                const userDetailsDoc = await firestore().collection('userDetails').doc(request.userId).get();
+                const userName = userDetailsDoc.data()?.name || 'Unknown';
+                return {
+                    id: doc.id,
+                    ...request,
+                    requestType: 'Compra de Acciones',
+                    userName: userName,
+                };
+            }));
+    
+            // Mantener savingsBoxJoinRequests como está
             const savingsBoxJoinRequests = await Promise.all(savingsBoxJoinRequestsSnapshot.docs.map(async doc => {
                 const request = doc.data();
                 const userDetails = await firestore().collection('userDetails').doc(request.userId).get();
@@ -156,11 +181,11 @@ const Dashboard = () => {
                 return {
                     id: doc.id,
                     ...request,
-                    requestType: 'solicitud de admisión',
+                    requestType: 'Solicitud de admisión',
                     userName: userName,
                 };
             }));
-
+    
             const allRequests = [...loanRequests, ...stockRequests, ...savingsBoxJoinRequests];
             setPendingRequests(allRequests);
             fetchAndDisplayUserRequests();
@@ -168,6 +193,7 @@ const Dashboard = () => {
             console.error(error);
         }
     };
+    
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
@@ -349,47 +375,56 @@ const Dashboard = () => {
                 <View>
                     <Text style={styles.jumbotronText}>Solicitudes Pendientes</Text>
                     {pendingRequests.map((item, index) => (
-                        <View style={styles.requestCard} key={index}>
-                            <View style={styles.requestDetails}>
-                                <Text style={styles.requestText}>{`Solicitante: ${item.userName}`}</Text>
-                                <Text style={styles.requestType}>{`Tipo: ${item.requestType}`}</Text>
-                                {item.loanAmount && (
-                                    <Text style={styles.requestAmount}>{`Monto: $${item.loanAmount}`}</Text>
-                                )}
-                                <Text style={styles.requestStatus}>{`Estado: ${item.status}`}</Text>
-                            </View>
-                            <View>
-                                <TextInput
-                                    style={styles.rejectReasonInput}
-                                    onChangeText={(text) => handleRejectionTextChange(text, index)}
-                                    value={rejectionTexts[index] || ''}
-                                    placeholder="Razón del rechazo"
-                                />
-                                <View style={styles.buttonContainer}>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setButtonDisabled(true);
-                                            handleAccept(item.id, item.requestType);
-                                            onRefresh();
-                                        }}
-                                        style={styles.button}
-                                        disabled={buttonDisabled}
-                                    >
-                                        <Text style={styles.buttonText}>Aceptar</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => handleReject(item.id, item.requestType)}
-                                        style={styles.button}
-                                        disabled={!rejectionTexts[index]?.trim()}
-                                    >
-                                        <Text style={styles.buttonText}>Rechazar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+                    <View style={styles.requestCard} key={index}>
+                        {/* Request Details */}
+                        <View style={styles.requestDetails}>
+                        <Text style={styles.requestText}>{`Solicitante: ${item.userName}`}</Text>
+                        <Text style={styles.requestType}>{`Tipo: ${item.requestType}`}</Text>
+                        {item.loanAmount && (
+                            <Text style={styles.requestAmount}>{`Monto: $${item.loanAmount}`}</Text>
+                        )}
+                        <Text style={styles.requestStatus}>{`Estado: ${item.status}`}</Text>
                         </View>
+
+                        {/* Rejection Reason Input */}
+                        <TextInput
+                        style={styles.rejectReasonInput}
+                        onChangeText={(text) => handleRejectionTextChange(text, index)}
+                        value={rejectionTexts[index] || ''}
+                        placeholder="Razón del rechazo"
+                        />
+
+                        {/* Action Buttons */}
+                        <View style={styles.actionButtonsContainer}>
+                        <TouchableOpacity
+                            onPress={() => {
+                            setButtonDisabled(true);
+                            handleAccept(item.id, item.requestType);
+                            onRefresh();
+                            }}
+                            style={[styles.actionButton, buttonDisabled && styles.disabledButton]}
+                            disabled={buttonDisabled}
+                        >
+                            <Text style={styles.buttonText}>Aceptar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => handleReject(item.id, item.requestType)}
+                            style={[
+                            styles.actionButton,
+                            (!rejectionTexts[index]?.trim() || buttonDisabled) && styles.disabledButton,
+                            ]}
+                            disabled={!rejectionTexts[index]?.trim() || buttonDisabled}
+                        >
+                            <Text style={styles.buttonText}>Rechazar</Text>
+                        </TouchableOpacity>
+                        </View>
+                    </View>
                     ))}
                 </View>
-            )}
+                )}
+
+
+
 
             {/* Sección de botones para acciones */}
             <View style={styles.buttonContainer}>

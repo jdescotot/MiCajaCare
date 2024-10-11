@@ -2,9 +2,8 @@
 // loanPanel.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Modal, Dimensions, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Modal, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Slider from '@react-native-community/slider';
 import { requestLoan } from '../../services/LoanService';
 import styles from '../../styles/PanelStyle';
 import firestore from '@react-native-firebase/firestore';
@@ -22,7 +21,7 @@ const getCurrentUserSavingsBoxId = async () => {
     const userData = userDoc.data();
 
     if (!userData || !userData.savingsBoxId) {
-        throw new Error('Documento de usuario o caja de ahorro no valido o faltante');
+        throw new Error('Documento de usuario o caja de ahorro no válido o faltante');
     }
 
     return userData.savingsBoxId;
@@ -40,46 +39,26 @@ const LoansPanel = () => {
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
     const navigation = useNavigation();
+
     useEffect(() => {
         navigation.setOptions({ title: 'Préstamos' });
     }, [navigation]);
-
-    const confirmLoanRequest = async () => {
-        try {
-            const savingsBoxId = await getCurrentUserSavingsBoxId();
-            const rate = await getInterestRate(savingsBoxId);
-            setInterestRate(rate);
-            await requestLoan(loanAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail);
-            setConfirmModalVisible(false);
-        } catch (error) {
-            if (error.message === 'No se ha conectado a su cuenta no puede hacer peticiones' || error.message === 'Documento de usuario o caja de ahorro no valido o faltante') {
-                Alert.alert("Usuario no identificado, por favor inicie sesión");
-            } else if (error.message === 'Savings box not found' || error.message === 'Documento de caja de ahorro no valido o tasa de interés faltante') {
-                Alert.alert("Error al obtener detalles de la caja de ahorros");
-            } else {
-                Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
-            }
-        }
-    };
 
     const getInterestRate = async (savingsBoxId) => {
         const savingsBoxDoc = await firestore().collection('savingsBoxes').doc(savingsBoxId).get();
         const savingsBoxData = savingsBoxDoc.data();
 
         if (!savingsBoxData || savingsBoxData.loanInterestRate === undefined) {
-            throw new Error('Documento de caja de ahorro no valido o tasa de interés faltante');
+            throw new Error('Documento de caja de ahorro no válido o tasa de interés faltante');
         }
         return savingsBoxData.loanInterestRate;
     };
 
-    const windowWidth = Dimensions.get('window').width;
-
     const calculateCompoundInterest = (principal, rate, timesCompounded, time) => {
         const timeInYears = time / 12;
-        const decimalRate = rate / 10;
-        console.log("la prueba es de ",Math.pow((1 + decimalRate / timesCompounded), timesCompounded * timeInYears),principal);
+        const decimalRate = rate / 100;
         const amount = principal * (Math.pow((1 + decimalRate / timesCompounded), timesCompounded * timeInYears));
-        return amount.toFixed(6);
+        return amount.toFixed(2);
     };
 
     const handleCalculateInterest = (num) => {
@@ -87,34 +66,48 @@ const LoansPanel = () => {
         setInterest(total);
     };
 
+    useEffect(() => {
+        const fetchInterestRate = async () => {
+            try {
+                const savingsBoxId = await getCurrentUserSavingsBoxId();
+                const rate = await getInterestRate(savingsBoxId);
+                setInterestRate(rate);
+                handleCalculateInterest(loanAmount);
+            } catch (error) {
+                console.error(error);
+                Alert.alert('Error', 'No se pudo obtener la tasa de interés.');
+            }
+        };
+
+        fetchInterestRate();
+    }, [loanDuration, loanAmount]);
+
     const handleRequestLoan = async () => {
         setIsButtonDisabled(true);
         try {
             const savingsBoxId = await getCurrentUserSavingsBoxId();
-            setInterestRate(interestRate);
             const roundedTotalInterestAmount = Math.round(interest * 100) / 100;
-            await requestLoan(roundedTotalInterestAmount, setConfirmModalVisible, savingsBoxId, loanReason, loanDuration, loanDetail, loanAmount)
-                .catch(() => {
-                    Alert.alert("No se puede enviar en estos momentos, intente en 5 minutos");
-                });
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                navigation.navigate('Dashboard');
+
+            await requestLoan(
+                roundedTotalInterestAmount,
+                setConfirmModalVisible,
+                savingsBoxId,
+                loanReason,
+                loanDuration,
+                loanDetail,
+                loanAmount
+            );
+
+            // Mostrar alerta de éxito y navegar a la pantalla principal
+            Alert.alert('Solicitud enviada con éxito', '', [
+                { text: 'OK', onPress: () => navigation.navigate('Dashboard') },
+            ]);
         } catch (error) {
             console.error(error);
-            Alert.alert("Error al procesar la solicitud");
+            Alert.alert('Error', 'No se pudo procesar la solicitud.');
         }
         setIsButtonDisabled(false);
     };
-
-    useEffect(() => {
-        const fetchInterestRate = async () => {
-            const savingsBoxId = await getCurrentUserSavingsBoxId();
-            const theinterestRate = await getInterestRate(savingsBoxId);
-            setInterestRate(theinterestRate);
-        };
-
-        fetchInterestRate();
-    }, []);
 
     return (
         <View style={styles.gradientContainer}>
@@ -122,7 +115,7 @@ const LoansPanel = () => {
                 <Text style={styles.title}>Solicitar préstamo</Text>
                 <Text style={styles.title2}>Ingrese la cantidad a tomar:</Text>
                 <TextInput
-                    onChangeText={text => {
+                    onChangeText={(text) => {
                         const num = parseFloat(text);
                         if (!isNaN(num)) {
                             setLoanAmount(num);
@@ -134,17 +127,20 @@ const LoansPanel = () => {
                     }}
                     value={loanAmount.toString()}
                     keyboardType="numeric"
-                    style={[styles.input, { textAlign: 'center', fontSize: 20, color: '#333' }]} // Asegura que el texto sea visible
+                    style={[styles.input, { textAlign: 'center', fontSize: 20, color: '#333' }]}
                     placeholderTextColor="#aaa"
                 />
                 <Text style={styles.title2}>Seleccione el tiempo a tomar:</Text>
                 <Picker
                     selectedValue={loanDuration}
-                    onValueChange={(itemValue) => {setLoanDuration(itemValue)}}
+                    onValueChange={(itemValue) => {
+                        setLoanDuration(itemValue);
+                        handleCalculateInterest(loanAmount);
+                    }}
                     style={styles.picker}
                 >
-                    <Picker.Item label="3 meses" value="3" />
-                    <Picker.Item label="6 meses" value="6" />
+                    <Picker.Item label="3 meses" value={3} />
+                    <Picker.Item label="6 meses" value={6} />
                 </Picker>
                 <TextInput
                     style={[styles.inputWhite, { textAlignVertical: 'top', color: '#333' }]}
@@ -152,7 +148,7 @@ const LoansPanel = () => {
                     numberOfLines={4}
                     placeholder="Especifique el motivo del préstamo"
                     placeholderTextColor="#aaa"
-                    onChangeText={text => {
+                    onChangeText={(text) => {
                         setLoanDetail(text);
                     }}
                     value={loanDetail}
@@ -168,9 +164,7 @@ const LoansPanel = () => {
                     <Picker.Item label="Negocio" value="negocio" />
                     <Picker.Item label="Otros" value="otros" />
                 </Picker>
-                <Text style={styles.title2}>
-                    Total con interés: {interest}
-                </Text>
+                <Text style={styles.title2}>Total con interés: {interest}</Text>
                 <TouchableOpacity
                     onPress={handleRequestLoan}
                     disabled={loanDetail === '' || isButtonDisabled}
@@ -178,41 +172,6 @@ const LoansPanel = () => {
                 >
                     <Text style={styles.buttonText}>Solicitar Préstamo</Text>
                 </TouchableOpacity>
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={confirmModalVisible}
-                    onRequestClose={() => {
-                        setConfirmModalVisible(!confirmModalVisible);
-                    }}
-                >
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Confirmar</Text>
-                        <Text style={styles.modalText}>{`Monto: ${loanAmount}`}</Text>
-                        <TextInput
-                            placeholder="Ingrese el motivo del préstamo"
-                            onChangeText={text => setLoanReason(text)}
-                            value={loanReason}
-                            style={styles.modalInput}
-                            placeholderTextColor="#aaa"
-                        />
-                        <Text style={styles.modalText}>{`Defina el tiempo del préstamo: ${loanDuration} Meses`}</Text>
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={3}
-                            maximumValue={6}
-                            step={3}
-                            onValueChange={value => setLoanDuration(value)}
-                            value={loanDuration}
-                        />
-                        <TouchableOpacity style={styles.modalButton} onPress={confirmLoanRequest}>
-                            <Text style={styles.buttonText}>Confirmar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setConfirmModalVisible(false)}>
-                            <Text style={styles.buttonText}>Cancelar</Text>
-                        </TouchableOpacity>
-                    </View>
-                </Modal>
             </View>
         </View>
     );

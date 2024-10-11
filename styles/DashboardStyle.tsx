@@ -87,17 +87,9 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   requestDetails: {
-    flex: 1,
+    marginBottom: 10,
   },
   requestText: {
     fontSize: 16,
@@ -125,6 +117,8 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 5,
     marginTop: 10,
+    width: '100%',
+    marginBottom: 10,
   },
   liquidesContainer: {
     backgroundColor: '#00695c',
@@ -149,6 +143,22 @@ export const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333333',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flex: 0.48,
+    backgroundColor: '#e36f1e',
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   cardContainer: {
     flexDirection: 'row',
@@ -206,6 +216,9 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#3f51b5',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
   buttonContainer: {
     alignItems: 'center',

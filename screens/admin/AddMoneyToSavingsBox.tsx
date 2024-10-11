@@ -1,6 +1,5 @@
 /* eslint-disable prettier/prettier */
 // screens/AddMoneyToSavingsBox.tsx
-// Updated AddMoneyToSavingsBox.tsx to use the savings box ID retrieval method similar to LoansPanel.tsx
 
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Alert, Text, TouchableOpacity } from 'react-native';
@@ -25,7 +24,7 @@ const AddMoneyToSavingsBox = () => {
   const getCurrentUserSavingsBoxId = async () => {
     const user = auth().currentUser;
     if (!user) {
-      throw new Error('No se ha conectado a su cuenta no puede hacer peticiones');
+      throw new Error('No se ha conectado a su cuenta, no puede hacer peticiones');
     }
 
     const userId = user.uid;
@@ -33,7 +32,7 @@ const AddMoneyToSavingsBox = () => {
     const userData = userDoc.data();
 
     if (!userData || !userData.savingsBoxId) {
-      throw new Error('Documento de usuario o caja de ahorro no valido o faltante');
+      throw new Error('Documento de usuario o caja de ahorro no válido o faltante');
     }
 
     return userData.savingsBoxId;
@@ -89,7 +88,10 @@ const AddMoneyToSavingsBox = () => {
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
 
-      Alert.alert('Éxito', 'El dinero se agregó exitosamente.');
+      // Modificación aquí: Navegar a la pantalla principal después de una solicitud exitosa
+      Alert.alert('Éxito', 'El dinero se agregó exitosamente.', [
+        { text: 'OK', onPress: () => navigation.navigate('Dashboard') },
+      ]);
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Un error ocurrió al agregar el dinero.');
@@ -122,4 +124,3 @@ const AddMoneyToSavingsBox = () => {
 };
 
 export default AddMoneyToSavingsBox;
-
