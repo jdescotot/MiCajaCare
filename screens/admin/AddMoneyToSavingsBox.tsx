@@ -8,16 +8,16 @@ import { updateSavingsBox } from '../../services/SavingsBoxService';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import styles from '../../styles/PanelStyle';
-import { useNavigation }  from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 
 const AddMoneyToSavingsBox = () => {
   const [savingsBoxId, setSavingsBoxId] = useState('');
   const [amountToAdd, setAmountToAdd] = useState('');
   const [eventExplanation, setEventExplanation] = useState('');
-  
+
   const navigation = useNavigation();
-  
+
   useEffect(() => {
     navigation.setOptions({ title: 'Ganancias por Eventos' });
   }, [navigation]);
@@ -76,7 +76,10 @@ const AddMoneyToSavingsBox = () => {
 
       const updatedTotalInvestmentToAdd = (savingsBoxData.totalInvestmentToAdd || 0) + amount;
       const updatedGananciaDeCaja = (savingsBoxData.gananciaDeCaja || 0) + amount;
-      await updateSavingsBox(savingsBoxId, { totalInvestmentToAdd: updatedTotalInvestmentToAdd, gananciaDeCaja: updatedGananciaDeCaja });
+      await updateSavingsBox(savingsBoxId, {
+        totalInvestmentToAdd: updatedTotalInvestmentToAdd,
+        gananciaDeCaja: updatedGananciaDeCaja,
+      });
 
       await firestore().collection('loanRequests').add({
         savingsBoxId: savingsBoxId,
@@ -94,8 +97,8 @@ const AddMoneyToSavingsBox = () => {
   };
 
   return (
-    <LinearGradient colors={['#e36f1e', '#a1c4fd']} style={styles.gradientContainer}>
-      <View style={styles.container}>
+    <LinearGradient colors={['#f0f0f0', '#d9d9d9']} style={styles.gradientContainer}>
+      <View style={styles.innerContainer}>
         <Text style={styles.title}>Ganancias por Eventos</Text>
         <TextInput
           style={styles.input}
@@ -119,3 +122,4 @@ const AddMoneyToSavingsBox = () => {
 };
 
 export default AddMoneyToSavingsBox;
+
